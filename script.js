@@ -1,5 +1,209 @@
-// Google Apps Script Configuration
+// ============ GOOGLE APPS SCRIPT CONFIG ============
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw4KeS_4Q4Qqj7h5Rt5GxgGM27X_mLU_Sbq6blVNvsXrVVboAZuLdwjFGePyZtMstHgKA/exec';
+
+// ============ CORS PROXY SOLUTION ============
+// Gunakan CORS proxy untuk development
+const USE_CORS_PROXY = true; // Set true untuk GitHub Pages, false untuk localhost
+
+function getScriptUrl() {
+    if (USE_CORS_PROXY) {
+        // Gunakan CORS proxy untuk menghindari CORS error di GitHub Pages
+        const encodedUrl = encodeURIComponent(GOOGLE_SCRIPT_URL);
+        return `https://corsproxy.io/?${encodedUrl}`;
+    }
+    return GOOGLE_SCRIPT_URL;
+}
+
+// ============ GOOGLE SHEETS FUNCTIONS ============
+
+async function testGoogleScriptConnection() {
+    try {
+        updateSyncStatus('syncing');
+        
+        const scriptUrl = getScriptUrl();
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        
+        // Test dengan GET request
+        const testUrl = `${scriptUrl}${scriptUrl.includes('corsproxy.io') ? '' : '?'}action=test&_=${Date.now()}`;
+        
+        const response = await fetch(testUrl, {
+            method: 'GET',
+            mode: 'cors',
+            signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            updateSyncStatus('synced');
+            showNotification('✅ Koneksi Google Apps Script berhasil!', 'success');
+            console.log('Test result:', result);
+            return true;
+        } else {
+            throw new Error(result.error || 'Script mengembalikan error');
+        }
+    } catch (error) {
+        updateSyncStatus('error');
+        
+        if (error.name === 'AbortError') {
+            showNotification('⏱️ Timeout: Koneksi terlalu lama', 'error');
+        } else if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
+            showNotification('🔗 Gagal terhubung karena CORS. Coba deploy ulang Google Script.', 'error');
+        } else {
+            showNotification(`❌ Error: ${error.message}`, 'error');
+        }
+        
+        console.error('Connection error:', error);
+        return false;
+    }
+}
+
+async function saveToGoogleSheets() {
+    try {
+        updateSyncStatus('syncing');
+        
+        const data = {
+            transactions: JSON.parse(localStorage.getItem('transactions') || '[]'),
+            savingTargets: JSON.parse(localStorage.getItem('savingTargets') || '[]'),
+            reminders: JSON.parse(localStorage.getItem('reminders') || '[]'),
+            timestamp: new Date().toISOString()
+        };
+        
+        const scriptUrl = getScriptUrl();
+        const payload = {
+            action: 'saveData',
+            data: data
+        };
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 20000);
+        
+        let response;
+        
+        if (scriptUrl.includes('corsproxy.io')) {
+            // Gunakan FormData untuk CORS proxy
+            const formData = new FormData();
+            formData.append('action', 'saveData');
+            formData.append('data', JSON.stringify(data));
+            
+            response = await fetch(scriptUrl, {
+                method: 'POST',
+                body: formData,
+                mode: 'cors',
+                signal: controller.signal
+            });
+        } else {
+            // Gunakan JSON langsung untuk Google Apps Script
+            response = await fetch(scriptUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                mode: 'cors',
+                body: JSON.stringify(payload),
+                signal: controller.signal
+            });
+        }
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            updateLocalDataSyncStatus();
+            
+            const now = new Date();
+            localStorage.setItem('lastSync', now.toISOString());
+            document.getElementById('last-sync').textContent = formatDate(now.toISOString());
+            
+            updateSyncStatus('synced');
+            showNotification('✅ Data berhasil disimpan ke Google Sheets!', 'success');
+            console.log('Save result:', result);
+        } else {
+            throw new Error(result.error || 'Gagal menyimpan ke Google Sheets');
+        }
+    } catch (error) {
+        updateSyncStatus('error');
+        
+        if (error.name === 'AbortError') {
+            showNotification('⏱️ Timeout: Save data terlalu lama', 'error');
+        } else if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
+            showNotification('🔗 CORS Error: Tidak bisa akses Google Script dari GitHub Pages. Coba test di localhost.', 'error');
+            console.error('CORS Error details:', error);
+        } else {
+            showNotification(`❌ Gagal save: ${error.message}`, 'error');
+        }
+        
+        console.error('Save error:', error);
+    }
+}
+
+async function loadFromGoogleSheets() {
+    try {
+        updateSyncStatus('syncing');
+        
+        const scriptUrl = getScriptUrl();
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
+        
+        // Load dengan GET request
+        const loadUrl = `${scriptUrl}${scriptUrl.includes('corsproxy.io') ? '' : '?'}action=loadData&_=${Date.now()}`;
+        
+        const response = await fetch(loadUrl, {
+            method: 'GET',
+            mode: 'cors',
+            signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            localStorage.setItem('transactions', JSON.stringify(result.data.transactions || []));
+            localStorage.setItem('savingTargets', JSON.stringify(result.data.savingTargets || []));
+            localStorage.setItem('reminders', JSON.stringify(result.data.reminders || []));
+            
+            localStorage.setItem('lastSync', new Date().toISOString());
+            document.getElementById('last-sync').textContent = formatDate(new Date().toISOString());
+            
+            loadAllData();
+            
+            updateSyncStatus('synced');
+            showNotification('✅ Data berhasil dimuat dari Google Sheets!', 'success');
+            console.log('Loaded data counts:', result.counts);
+        } else {
+            throw new Error(result.error || 'No data');
+        }
+    } catch (error) {
+        updateSyncStatus('error');
+        
+        if (error.name === 'AbortError') {
+            showNotification('⏱️ Timeout: Load data terlalu lama', 'error');
+        } else if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
+            showNotification('🔗 CORS Error: Tidak bisa load dari GitHub Pages', 'error');
+        } else {
+            showNotification(`❌ Gagal load: ${error.message}`, 'error');
+        }
+        
+        console.error('Load error:', error);
+    }
+}
 
 // ============ GOOGLE SHEETS SYNC FUNCTIONS ============
 
