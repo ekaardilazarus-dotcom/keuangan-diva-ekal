@@ -105,31 +105,44 @@ async function saveToGoogleSheets() {
             timestamp: new Date().toISOString()
         };
         
-        // Gunakan FormData untuk hindari CORS issues
-        const formData = new FormData();
-        formData.append('action', 'saveData');
-        formData.append('data', JSON.stringify(data));
+        // Gunakan JSON langsung
+        const payload = {
+            action: 'saveData',
+            data: data
+        };
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 20000);
         
         const response = await fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
-            body: formData
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+            signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
         
         const result = await response.json();
         
         if (result.success) {
-            // Update sync status di data lokal
             updateLocalDataSyncStatus();
             
-            // Update timestamp
-            localStorage.setItem('lastSync', new Date().toISOString());
-            document.getElementById('last-sync').textContent = formatDate(new Date().toISOString());
+            const now = new Date();
+            localStorage.setItem('lastSync', now.toISOString());
+            document.getElementById('last-sync').textContent = formatDate(now.toISOString());
             
             updateSyncStatus('synced');
             showNotification('✅ Data berhasil disimpan ke Google Sheets!', 'success');
             console.log('Save result:', result);
         } else {
-            throw new Error(result.error || 'Save failed');
+            throw new Error(result.error || 'Gagal menyimpan ke Google Sheets');
         }
     } catch (error) {
         updateSyncStatus('error');
