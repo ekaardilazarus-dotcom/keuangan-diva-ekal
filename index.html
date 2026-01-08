@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinTrack - Pelacak Keuangan</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header dengan perbandingan pemasukan/pengeluaran -->
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+                <h1>FinTrack</h1>
+            </div>
+            <div class="comparison">
+                <div class="comparison-item">
+                    <span class="comparison-label">Pemasukan</span>
+                    <span class="comparison-value income-total">Rp 0</span>
+                </div>
+                <div class="comparison-item">
+                    <span class="comparison-label">Pengeluaran</span>
+                    <span class="comparison-value expense-total">Rp 0</span>
+                </div>
+                <div class="comparison-item">
+                    <span class="comparison-label">Saldo</span>
+                    <span class="comparison-value balance">Rp 0</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- Sidebar Kiri: Filter dan Jenis -->
+            <aside class="sidebar left-sidebar">
+                <div class="sidebar-section">
+                    <h3><i class="fas fa-filter"></i> Filter Data</h3>
+                    <div class="filter-options">
+                        <div class="filter-option">
+                            <label><input type="radio" name="type" value="all" checked> Semua</label>
+                        </div>
+                        <div class="filter-option">
+                            <label><input type="radio" name="type" value="income"> Pemasukan</label>
+                        </div>
+                        <div class="filter-option">
+                            <label><input type="radio" name="type" value="expense"> Pengeluaran</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="sidebar-section">
+                    <h3><i class="fas fa-calendar-alt"></i> Periode Waktu</h3>
+                    <div class="filter-options">
+                        <div class="filter-option">
+                            <label><input type="radio" name="period" value="day" checked> Hari Ini</label>
+                        </div>
+                        <div class="filter-option">
+                            <label><input type="radio" name="period" value="month"> Bulan Ini</label>
+                        </div>
+                        <div class="filter-option">
+                            <label><input type="radio" name="period" value="year"> Tahun Ini</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="sidebar-section">
+                    <h3><i class="fas fa-chart-pie"></i> Ringkasan Bulan Ini</h3>
+                    <div class="month-summary">
+                        <p>Pemasukan: <span id="month-income">Rp 0</span></p>
+                        <p>Pengeluaran: <span id="month-expense">Rp 0</span></p>
+                        <p>Saldo: <span id="month-balance">Rp 0</span></p>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Konten Utama: Input Data dan Rekap -->
+            <main class="content">
+                <div class="input-section">
+                    <h2><i class="fas fa-plus-circle"></i> Tambah Transaksi</h2>
+                    <form id="transaction-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="transaction-type">Jenis Transaksi</label>
+                                <select id="transaction-type" required>
+                                    <option value="">Pilih Jenis</option>
+                                    <option value="income">Pemasukan</option>
+                                    <option value="expense">Pengeluaran</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="category">Kategori</label>
+                                <select id="category" required>
+                                    <option value="">Pilih Kategori</option>
+                                    <option value="gaji">Gaji</option>
+                                    <option value="investasi">Investasi</option>
+                                    <option value="hibah">Hibah/Hadiah</option>
+                                    <option value="makanan">Makanan & Minuman</option>
+                                    <option value="transportasi">Transportasi</option>
+                                    <option value="belanja">Belanja</option>
+                                    <option value="hiburan">Hiburan</option>
+                                    <option value="kesehatan">Kesehatan</option>
+                                    <option value="pendidikan">Pendidikan</option>
+                                    <option value="lainnya">Lainnya</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="amount">Jumlah (Rp)</label>
+                                <input type="number" id="amount" placeholder="Contoh: 50000" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="date">Tanggal</label>
+                                <input type="date" id="date" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="description">Keterangan</label>
+                            <textarea id="description" placeholder="Tambahkan keterangan transaksi..." rows="2"></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn-submit">
+                            <i class="fas fa-save"></i> Simpan Transaksi
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="summary-section">
+                    <h2><i class="fas fa-list-alt"></i> Rekap Transaksi</h2>
+                    <div class="tabs">
+                        <button class="tab active" data-tab="day">Hari Ini</button>
+                        <button class="tab" data-tab="month">Bulan Ini</button>
+                    </div>
+                    
+                    <div class="transactions-list" id="day-transactions">
+                        <!-- Transaksi hari ini akan dimuat di sini -->
+                        <div class="empty-state">
+                            <i class="fas fa-receipt"></i>
+                            <p>Belum ada transaksi hari ini</p>
+                        </div>
+                    </div>
+                    
+                    <div class="transactions-list hidden" id="month-transactions">
+                        <!-- Transaksi bulan ini akan dimuat di sini -->
+                        <div class="empty-state">
+                            <i class="fas fa-receipt"></i>
+                            <p>Belum ada transaksi bulan ini</p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Sidebar Kanan: Pengingat Rutin -->
+            <aside class="sidebar right-sidebar">
+                <div class="sidebar-section">
+                    <h3><i class="fas fa-bell"></i> Pengingat Rutin</h3>
+                    <div class="reminders-list">
+                        <div class="reminder-item">
+                            <div class="reminder-header">
+                                <h4>Listrik & Air</h4>
+                                <span class="reminder-date">Tgl 5 setiap bulan</span>
+                            </div>
+                            <p class="reminder-amount">Rp 750.000</p>
+                        </div>
+                        <div class="reminder-item">
+                            <div class="reminder-header">
+                                <h4>Internet & TV Kabel</h4>
+                                <span class="reminder-date">Tgl 10 setiap bulan</span>
+                            </div>
+                            <p class="reminder-amount">Rp 450.000</p>
+                        </div>
+                        <div class="reminder-item">
+                            <div class="reminder-header">
+                                <h4>Kredit Mobil</h4>
+                                <span class="reminder-date">Tgl 15 setiap bulan</span>
+                            </div>
+                            <p class="reminder-amount">Rp 3.500.000</p>
+                        </div>
+                        <div class="reminder-item">
+                            <div class="reminder-header">
+                                <h4>Asuransi Kesehatan</h4>
+                                <span class="reminder-date">Tgl 25 setiap bulan</span>
+                            </div>
+                            <p class="reminder-amount">Rp 800.000</p>
+                        </div>
+                    </div>
+                    
+                    <div class="add-reminder">
+                        <h4><i class="fas fa-plus"></i> Tambah Pengingat</h4>
+                        <div class="form-group">
+                            <input type="text" id="reminder-name" placeholder="Nama pengingat">
+                        </div>
+                        <div class="form-group">
+                            <input type="number" id="reminder-amount" placeholder="Jumlah (Rp)">
+                        </div>
+                        <div class="form-group">
+                            <input type="number" id="reminder-date" placeholder="Tanggal (1-31)" min="1" max="31">
+                        </div>
+                        <button class="btn-add-reminder">
+                            <i class="fas fa-bell"></i> Tambah
+                        </button>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>© 2023 FinTrack - Pelacak Keuangan Pribadi</p>
+            <p class="footer-info">Data disimpan di browser Anda | <button id="clear-data">Hapus Semua Data</button></p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
