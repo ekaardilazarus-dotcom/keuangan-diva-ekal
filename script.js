@@ -1,5 +1,5 @@
 // Google Apps Script Configuration
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyCAve7_9EH5OPofRMKQ24gQwJmapQQCM3_ENawv2moD6biX_DDDS1DK5FNhMAf4k94kw/exec';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxJiQh-4P0Fu49Ook9yEjG6vhAFa3DgxpewTUHwfak4rmS_KEtRUndZ57jj0CGjj2ZF/exec';
 
 // Inisialisasi aplikasi
 document.addEventListener('DOMContentLoaded', function() {
