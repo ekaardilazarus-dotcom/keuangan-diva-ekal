@@ -1,31 +1,43 @@
 // Google Apps Script Configuration
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzyU_A1x0SjEIOVZ3CmH0diULOgv0WcNur7xGEvHaPUlFJSlFK-fZjePqCqSIeqHv8tsw/exec';
+
+// ============ GOOGLE SHEETS SYNC FUNCTIONS ============
+
+// Test connection to Google Apps Script
 async function testGoogleScriptConnection() {
     try {
         updateSyncStatus('syncing');
         
-        // Tambah timestamp untuk hindari cache
-        const response = await fetch(`${GOOGLE_SCRIPT_URL}?action=test&_=${Date.now()}`);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        
+        const response = await fetch(`${GOOGLE_SCRIPT_URL}?action=test&_=${Date.now()}`, {
+            signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
         
         if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
         
         const result = await response.json();
         
         if (result.success) {
             updateSyncStatus('synced');
-            showNotification('✅ Koneksi Google Sheets berhasil!', 'success');
-            console.log('Connection test:', result);
+            showNotification('✅ Koneksi Google Apps Script berhasil!', 'success');
+            console.log('Test result:', result);
             return true;
         } else {
-            throw new Error(result.error || 'Script error');
+            throw new Error(result.error || 'Script mengembalikan error');
         }
     } catch (error) {
         updateSyncStatus('error');
         
-        if (error.message.includes('Failed to fetch')) {
-            showNotification('❌ Gagal terhubung. Periksa koneksi internet.', 'error');
+        if (error.name === 'AbortError') {
+            showNotification('⏱️ Timeout: Koneksi terlalu lama', 'error');
+        } else if (error.message.includes('Failed to fetch')) {
+            showNotification('🔗 Gagal terhubung. Periksa koneksi internet atau CORS policy.', 'error');
         } else {
             showNotification(`❌ Error: ${error.message}`, 'error');
         }
@@ -35,15 +47,22 @@ async function testGoogleScriptConnection() {
     }
 }
 
-// Load data dari Google Sheets
+// Load data from Google Sheets - TUNGGAL SATU-SATUNYA TOMBOL
 async function loadFromGoogleSheets() {
     try {
         updateSyncStatus('syncing');
         
-        const response = await fetch(`${GOOGLE_SCRIPT_URL}?action=loadData&_=${Date.now()}`);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
+        
+        const response = await fetch(`${GOOGLE_SCRIPT_URL}?action=loadData&_=${Date.now()}`, {
+            signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
         
         if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
         
         const result = await response.json();
@@ -74,7 +93,7 @@ async function loadFromGoogleSheets() {
     }
 }
 
-// Save data ke Google Sheets
+// Save data to Google Sheets - AUTOMATIC ON EVERY EDIT
 async function saveToGoogleSheets() {
     try {
         updateSyncStatus('syncing');
@@ -169,10 +188,7 @@ function updateSyncStatus(status = '') {
 
 // Setup Google Sheets event listeners
 function setupGoogleSheetsEvents() {
-    // Sync to Google Sheets
-    document.getElementById('btn-sync-to-cloud').addEventListener('click', saveToGoogleSheets);
-    
-    // Sync from Google Sheets  
+    // HANYA SATU TOMBOL: Sync from Google Sheets  
     document.getElementById('btn-sync-from-cloud').addEventListener('click', loadFromGoogleSheets);
     
     // Test connection
@@ -189,6 +205,8 @@ window.addEventListener('load', function() {
     }, 1000);
 });
 
+// ============ CORE APPLICATION FUNCTIONS ============
+
 // Inisialisasi aplikasi
 document.addEventListener('DOMContentLoaded', function() {
     // Set tanggal hari ini sebagai default
@@ -202,7 +220,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Inisialisasi data jika belum ada
     initializeData();
     
-    // Load data awal
+    // Load data awal dari localStorage
     loadAllData();
     
     // Setup event listeners
@@ -218,7 +236,7 @@ document.addEventListener('DOMContentLoaded', function() {
     updateReminderDurations();
 });
 
-// Inisialisasi data di localStorage
+// Inisialisasi data di localStorage - TIDAK ADA DATA DEFAULT
 function initializeData() {
     if (!localStorage.getItem('transactions')) {
         localStorage.setItem('transactions', JSON.stringify([]));
@@ -229,62 +247,8 @@ function initializeData() {
     }
     
     if (!localStorage.getItem('reminders')) {
-        // Data pengingat default dengan durasi
-        const defaultReminders = [
-            { 
-                id: 1, 
-                name: "Listrik & Air", 
-                amount: 750000, 
-                date: 5, 
-                category: "listrik",
-                description: "Pembayaran bulanan listrik dan air",
-                duration: 0,
-                startMonth: currentMonth,
-                currentMonth: 0,
-                createdAt: new Date().toISOString(),
-                syncStatus: 'local'
-            },
-            { 
-                id: 2, 
-                name: "Internet & TV Kabel", 
-                amount: 450000, 
-                date: 10, 
-                category: "internet",
-                description: "Paket internet dan TV kabel",
-                duration: 0,
-                startMonth: currentMonth,
-                currentMonth: 0,
-                createdAt: new Date().toISOString(),
-                syncStatus: 'local'
-            },
-            { 
-                id: 3, 
-                name: "Cicilan Mobil", 
-                amount: 3500000, 
-                date: 15, 
-                category: "cicilan",
-                description: "Cicilan mobil 36 bulan",
-                duration: 36,
-                startMonth: "2023-01",
-                currentMonth: 10,
-                createdAt: new Date().toISOString(),
-                syncStatus: 'local'
-            },
-            { 
-                id: 4, 
-                name: "Asuransi Kesehatan", 
-                amount: 800000, 
-                date: 25, 
-                category: "asuransi",
-                description: "Premi asuransi kesehatan tahunan",
-                duration: 12,
-                startMonth: "2023-03",
-                currentMonth: 7,
-                createdAt: new Date().toISOString(),
-                syncStatus: 'local'
-            }
-        ];
-        localStorage.setItem('reminders', JSON.stringify(defaultReminders));
+        // TIDAK ADA DATA DEFAULT - KOSONG SAJA
+        localStorage.setItem('reminders', JSON.stringify([]));
     }
     
     if (!localStorage.getItem('lastSync')) {
@@ -374,16 +338,6 @@ function setupEventListeners() {
     // Event listener untuk jenis transaksi (untuk filter kategori)
     document.getElementById('transaction-type').addEventListener('change', function() {
         filterCategoryOptions();
-    });
-    
-    // Event listener untuk sinkronisasi ke Google Sheets
-    document.getElementById('btn-sync-to-cloud').addEventListener('click', function() {
-        syncToGoogleSheets();
-    });
-    
-    // Event listener untuk sinkronisasi dari Google Sheets
-    document.getElementById('btn-sync-from-cloud').addEventListener('click', function() {
-        syncFromGoogleSheets();
     });
     
     // Event listener untuk tombol hapus semua data
@@ -520,7 +474,7 @@ function resetReminderForm() {
 }
 
 // Fungsi untuk menambahkan transaksi
-function addTransaction() {
+async function addTransaction() {
     const type = document.getElementById('transaction-type').value;
     const category = document.getElementById('category').value;
     const amount = parseInt(document.getElementById('amount').value);
@@ -555,6 +509,13 @@ function addTransaction() {
     // Jika transaksi tabungan, update target tabungan
     if (type === 'saving' && savingTargetId) {
         updateSavingTargetProgress(savingTargetId, amount);
+    }
+    
+    // SIMPAN OTOMATIS KE GOOGLE SHEETS
+    try {
+        await saveToGoogleSheets();
+    } catch (error) {
+        console.error('Auto-save failed:', error);
     }
     
     // Reset form
@@ -667,10 +628,10 @@ function displayTransactions(transactions) {
 }
 
 // Fungsi untuk menghapus transaksi
-function deleteTransaction(id) {
+async function deleteTransaction(id) {
     showConfirmModal(
         'Apakah Anda yakin ingin menghapus transaksi ini?',
-        function() {
+        async function() {
             const transactions = JSON.parse(localStorage.getItem('transactions'));
             const transaction = transactions.find(t => t.id === id);
             const updatedTransactions = transactions.filter(t => t.id !== id);
@@ -679,6 +640,13 @@ function deleteTransaction(id) {
             // Jika transaksi tabungan, kurangi progress target
             if (transaction.type === 'saving' && transaction.savingTargetId) {
                 updateSavingTargetProgress(transaction.savingTargetId, -transaction.amount);
+            }
+            
+            // SIMPAN OTOMATIS KE GOOGLE SHEETS
+            try {
+                await saveToGoogleSheets();
+            } catch (error) {
+                console.error('Auto-save failed:', error);
             }
             
             // Perbarui tampilan
@@ -750,7 +718,7 @@ function updateComparison() {
 }
 
 // Fungsi untuk menambahkan target tabungan
-function addSavingTarget() {
+async function addSavingTarget() {
     const name = document.getElementById('target-name').value;
     const amount = parseInt(document.getElementById('target-amount').value);
     const deadline = document.getElementById('target-deadline').value;
@@ -778,6 +746,13 @@ function addSavingTarget() {
     const targets = JSON.parse(localStorage.getItem('savingTargets'));
     targets.push(target);
     localStorage.setItem('savingTargets', JSON.stringify(targets));
+    
+    // SIMPAN OTOMATIS KE GOOGLE SHEETS
+    try {
+        await saveToGoogleSheets();
+    } catch (error) {
+        console.error('Auto-save failed:', error);
+    }
     
     // Reset form
     document.getElementById('target-name').value = '';
@@ -877,25 +852,40 @@ function loadSavingTargetsForSelect() {
 }
 
 // Update progress target tabungan
-function updateSavingTargetProgress(targetId, amount) {
+async function updateSavingTargetProgress(targetId, amount) {
     const targets = JSON.parse(localStorage.getItem('savingTargets'));
     const targetIndex = targets.findIndex(t => t.id === parseInt(targetId));
     
     if (targetIndex !== -1) {
         targets[targetIndex].currentAmount += amount;
         localStorage.setItem('savingTargets', JSON.stringify(targets));
+        
+        // SIMPAN OTOMATIS KE GOOGLE SHEETS
+        try {
+            await saveToGoogleSheets();
+        } catch (error) {
+            console.error('Auto-save failed:', error);
+        }
+        
         loadSavingTargets();
     }
 }
 
 // Fungsi untuk menghapus target tabungan
-function deleteSavingTarget(id) {
+async function deleteSavingTarget(id) {
     showConfirmModal(
         'Apakah Anda yakin ingin menghapus target tabungan ini?',
-        function() {
+        async function() {
             const targets = JSON.parse(localStorage.getItem('savingTargets'));
             const updatedTargets = targets.filter(t => t.id !== id);
             localStorage.setItem('savingTargets', JSON.stringify(updatedTargets));
+            
+            // SIMPAN OTOMATIS KE GOOGLE SHEETS
+            try {
+                await saveToGoogleSheets();
+            } catch (error) {
+                console.error('Auto-save failed:', error);
+            }
             
             // Perbarui tampilan
             loadSavingData();
@@ -1123,7 +1113,7 @@ function selectReminderForEdit(id) {
 }
 
 // Fungsi untuk menyimpan pengingat (tambah/update)
-function saveReminder() {
+async function saveReminder() {
     const id = document.getElementById('reminder-edit-id').value;
     const name = document.getElementById('reminder-edit-name').value;
     const category = document.getElementById('reminder-edit-category').value;
@@ -1182,6 +1172,13 @@ function saveReminder() {
     
     localStorage.setItem('reminders', JSON.stringify(reminders));
     
+    // SIMPAN OTOMATIS KE GOOGLE SHEETS
+    try {
+        await saveToGoogleSheets();
+    } catch (error) {
+        console.error('Auto-save failed:', error);
+    }
+    
     // Reset form
     resetReminderForm();
     
@@ -1195,17 +1192,24 @@ function saveReminder() {
 }
 
 // Fungsi untuk menghapus pengingat
-function deleteReminder() {
+async function deleteReminder() {
     const id = document.getElementById('reminder-edit-id').value;
     
     if (!id) return;
     
     showConfirmModal(
         'Apakah Anda yakin ingin menghapus pengingat ini?',
-        function() {
+        async function() {
             const reminders = JSON.parse(localStorage.getItem('reminders'));
             const updatedReminders = reminders.filter(r => r.id !== parseInt(id));
             localStorage.setItem('reminders', JSON.stringify(updatedReminders));
+            
+            // SIMPAN OTOMATIS KE GOOGLE SHEETS
+            try {
+                await saveToGoogleSheets();
+            } catch (error) {
+                console.error('Auto-save failed:', error);
+            }
             
             // Reset form
             resetReminderForm();
@@ -1292,277 +1296,7 @@ function updateUpcomingReminders() {
     });
 }
 
-// ============ GOOGLE SHEETS SYNC FUNCTIONS ============
-
-// Fungsi untuk test koneksi (GET request)
-async function testGoogleScriptConnection() {
-    const scriptUrl = localStorage.getItem('googleScriptUrl') || GOOGLE_SCRIPT_URL;
-    
-    if (!scriptUrl) {
-        showNotification('URL Google Apps Script belum diatur!', 'error');
-        return false;
-    }
-    
-    try {
-        updateSyncStatus('syncing');
-        
-        // Test dengan timeout
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
-        
-        const response = await fetch(`${scriptUrl}?action=test&_=${Date.now()}`, {
-            signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            updateSyncStatus('synced');
-            showNotification('✅ Koneksi Google Apps Script berhasil!', 'success');
-            console.log('Test result:', result);
-            return true;
-        } else {
-            throw new Error(result.error || 'Script mengembalikan error');
-        }
-    } catch (error) {
-        updateSyncStatus('error');
-        
-        if (error.name === 'AbortError') {
-            showNotification('⏱️ Timeout: Koneksi terlalu lama', 'error');
-        } else if (error.message.includes('Failed to fetch')) {
-            showNotification('🔗 Gagal terhubung. Periksa koneksi internet atau CORS policy.', 'error');
-        } else {
-            showNotification(`❌ Error: ${error.message}`, 'error');
-        }
-        
-        console.error('Connection error:', error);
-        return false;
-    }
-}
-
-// Fungsi untuk load data dari Google Sheets
-async function loadFromGoogleSheets() {
-    const scriptUrl = localStorage.getItem('googleScriptUrl') || GOOGLE_SCRIPT_URL;
-    
-    if (!scriptUrl) {
-        showNotification('URL Google Apps Script belum diatur!', 'error');
-        openConnectionModal();
-        return;
-    }
-    
-    try {
-        updateSyncStatus('syncing');
-        
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000);
-        
-        const response = await fetch(`${scriptUrl}?action=loadData&_=${Date.now()}`, {
-            signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const result = await response.json();
-        
-        if (result.success && result.data) {
-            // Simpan data dari Google Sheets
-            localStorage.setItem('transactions', JSON.stringify(result.data.transactions || []));
-            localStorage.setItem('savingTargets', JSON.stringify(result.data.savingTargets || []));
-            localStorage.setItem('reminders', JSON.stringify(result.data.reminders || []));
-            
-            // Simpan timestamp
-            localStorage.setItem('lastSync', new Date().toISOString());
-            document.getElementById('last-sync').textContent = formatDate(new Date().toISOString());
-            
-            // Perbarui tampilan
-            loadAllData();
-            
-            updateSyncStatus('synced');
-            showNotification('✅ Data berhasil diambil dari Google Sheets!', 'success');
-            console.log('Loaded data:', result.counts);
-        } else {
-            throw new Error(result.error || 'Tidak ada data di Google Sheets');
-        }
-    } catch (error) {
-        updateSyncStatus('error');
-        
-        if (error.name === 'AbortError') {
-            showNotification('⏱️ Timeout: Load data terlalu lama', 'error');
-        } else {
-            showNotification(`❌ Gagal load data: ${error.message}`, 'error');
-        }
-        
-        console.error('Load error:', error);
-    }
-}
-
-// Fungsi untuk save data ke Google Sheets (menggunakan FormData)
-async function saveToGoogleSheets() {
-    const scriptUrl = localStorage.getItem('googleScriptUrl') || GOOGLE_SCRIPT_URL;
-    
-    if (!scriptUrl) {
-        showNotification('URL Google Apps Script belum diatur!', 'error');
-        openConnectionModal();
-        return;
-    }
-    
-    try {
-        updateSyncStatus('syncing');
-        
-        const data = {
-            transactions: JSON.parse(localStorage.getItem('transactions')),
-            savingTargets: JSON.parse(localStorage.getItem('savingTargets')),
-            reminders: JSON.parse(localStorage.getItem('reminders')),
-            timestamp: new Date().toISOString()
-        };
-        
-        // Gunakan FormData untuk menghindari CORS preflight
-        const formData = new FormData();
-        formData.append('action', 'saveData');
-        formData.append('data', JSON.stringify(data));
-        
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 20000);
-        
-        const response = await fetch(scriptUrl, {
-            method: 'POST',
-            body: formData,
-            signal: controller.signal
-            // Jangan set headers, biarkan browser set otomatis untuk FormData
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            // Update status sinkronisasi di data lokal
-            updateLocalDataSyncStatus();
-            
-            // Simpan timestamp
-            const now = new Date();
-            localStorage.setItem('lastSync', now.toISOString());
-            document.getElementById('last-sync').textContent = formatDate(now.toISOString());
-            
-            updateSyncStatus('synced');
-            showNotification('✅ Data berhasil disimpan ke Google Sheets!', 'success');
-            console.log('Save result:', result);
-        } else {
-            throw new Error(result.error || 'Gagal menyimpan ke Google Sheets');
-        }
-    } catch (error) {
-        updateSyncStatus('error');
-        
-        if (error.name === 'AbortError') {
-            showNotification('⏱️ Timeout: Save data terlalu lama', 'error');
-        } else {
-            showNotification(`❌ Gagal save data: ${error.message}`, 'error');
-        }
-        
-        console.error('Save error:', error);
-    }
-}
-
-// Update Local Data Sync Status
-function updateLocalDataSyncStatus() {
-    try {
-        // Update transactions
-        const transactions = JSON.parse(localStorage.getItem('transactions'));
-        if (transactions && Array.isArray(transactions)) {
-            transactions.forEach(t => t.syncStatus = 'synced');
-            localStorage.setItem('transactions', JSON.stringify(transactions));
-        }
-        
-        // Update saving targets
-        const savingTargets = JSON.parse(localStorage.getItem('savingTargets'));
-        if (savingTargets && Array.isArray(savingTargets)) {
-            savingTargets.forEach(t => t.syncStatus = 'synced');
-            localStorage.setItem('savingTargets', JSON.stringify(savingTargets));
-        }
-        
-        // Update reminders
-        const reminders = JSON.parse(localStorage.getItem('reminders'));
-        if (reminders && Array.isArray(reminders)) {
-            reminders.forEach(r => r.syncStatus = 'synced');
-            localStorage.setItem('reminders', JSON.stringify(reminders));
-        }
-    } catch (error) {
-        console.error('Error updating sync status:', error);
-    }
-}
-
-// Update Event Listeners untuk Google Sheets
-function setupGoogleSheetsEventListeners() {
-    // Sync to Google Sheets
-    document.getElementById('btn-sync-to-cloud').addEventListener('click', saveToGoogleSheets);
-    
-    // Sync from Google Sheets
-    document.getElementById('btn-sync-from-cloud').addEventListener('click', loadFromGoogleSheets);
-    
-    // Test Connection
-    document.getElementById('test-connection').addEventListener('click', async function() {
-        const success = await testGoogleScriptConnection();
-        if (success) {
-            document.getElementById('data-status').textContent = 'Terhubung ke Google Sheets';
-        }
-    });
-    
-    // Setup Sheets
-    document.getElementById('btn-setup-sheets')?.addEventListener('click', async function() {
-        const scriptUrl = localStorage.getItem('googleScriptUrl') || GOOGLE_SCRIPT_URL;
-        if (!scriptUrl) {
-            showNotification('URL belum diatur!', 'error');
-            return;
-        }
-        
-        try {
-            const response = await fetch(`${scriptUrl}?action=setup&_=${Date.now()}`);
-            const result = await response.json();
-            
-            if (result.success) {
-                showNotification('✅ Sheets setup berhasil!', 'success');
-                console.log('Setup result:', result);
-            } else {
-                showNotification(`❌ Setup gagal: ${result.error}`, 'error');
-            }
-        } catch (error) {
-            showNotification(`❌ Error: ${error.message}`, 'error');
-        }
-    });
-}
-
-// Panggil fungsi setup event listeners untuk Google Sheets
-setupGoogleSheetsEventListeners();
-
-// Test koneksi otomatis saat load
-window.addEventListener('load', function() {
-    // Cek jika ada URL script yang tersimpan
-    const savedUrl = localStorage.getItem('googleScriptUrl');
-    if (savedUrl) {
-        // Test koneksi secara otomatis setelah 2 detik
-        setTimeout(() => {
-            testGoogleScriptConnection().then(success => {
-                if (success) {
-                    console.log('Auto-connection test successful');
-                }
-            });
-        }, 2000);
-    }
-});
+// ============ UTILITY FUNCTIONS ============
 
 // Fungsi untuk menghapus semua data
 function clearAllData() {
@@ -1671,4 +1405,48 @@ function formatCategory(category) {
     };
     
     return categoryNames[category] || category;
+}
+
+// ============ MODAL FUNCTIONS ============
+
+// Fungsi untuk membuka modal koneksi
+function openConnectionModal() {
+    const currentUrl = localStorage.getItem('googleScriptUrl') || GOOGLE_SCRIPT_URL;
+    document.getElementById('script-url-input').value = currentUrl;
+    document.getElementById('connection-modal').classList.add('active');
+}
+
+// Fungsi untuk menyimpan URL script
+function saveScriptUrl() {
+    const newUrl = document.getElementById('script-url-input').value;
+    if (newUrl && newUrl.trim() !== '') {
+        localStorage.setItem('googleScriptUrl', newUrl.trim());
+        showNotification('URL script berhasil disimpan!', 'success');
+        document.getElementById('connection-modal').classList.remove('active');
+        testGoogleScriptConnection();
+    }
+}
+
+// Fungsi untuk import data
+function importData() {
+    const importText = document.getElementById('import-data').value;
+    try {
+        const data = JSON.parse(importText);
+        
+        if (data.transactions) {
+            localStorage.setItem('transactions', JSON.stringify(data.transactions));
+        }
+        if (data.savingTargets) {
+            localStorage.setItem('savingTargets', JSON.stringify(data.savingTargets));
+        }
+        if (data.reminders) {
+            localStorage.setItem('reminders', JSON.stringify(data.reminders));
+        }
+        
+        loadAllData();
+        showNotification('Data berhasil diimport!', 'success');
+        document.getElementById('import-modal').classList.remove('active');
+    } catch (error) {
+        showNotification('Format JSON tidak valid!', 'error');
+    }
 }
