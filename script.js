@@ -1,5 +1,5 @@
 // Google Apps Script Configuration
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzyU_A1x0SjEIOVZ3CmH0diULOgv0WcNur7xGEvHaPUlFJSlFK-fZjePqCqSIeqHv8tsw/exec';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwT99aKDZeasBdvienHzvZnbalraFEjV9q-nUIxWJM26ADhXS5oyMsJrtmnn0EdiST4YA/exec';
 
 // ============ GOOGLE SHEETS SYNC FUNCTIONS ============
 
