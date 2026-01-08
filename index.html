@@ -16,7 +16,7 @@
         <header class="header">
             <div class="logo">
                 <i class="fas fa-piggy-bank"></i>
-                <h1>FinTrack<span class="logo-sub">+ Tabungan</span></h1>
+                <h1>FinTrack<span class="logo-sub">Pro</span></h1>
             </div>
             <div class="comparison">
                 <div class="comparison-item">
@@ -35,6 +35,10 @@
                     <span class="comparison-label">Saldo</span>
                     <span class="comparison-value balance">Rp 0</span>
                 </div>
+            </div>
+            <div class="sync-status" id="sync-status">
+                <i class="fas fa-sync-alt"></i>
+                <span>Local</span>
             </div>
         </header>
 
@@ -83,23 +87,42 @@
                         <p>Saldo: <span id="month-balance">Rp 0</span></p>
                     </div>
                 </div>
+                
+                <div class="sidebar-section">
+                    <h3><i class="fas fa-cloud"></i> Sinkronisasi</h3>
+                    <div class="sync-controls">
+                        <button class="btn-sync" id="btn-sync-to-cloud">
+                            <i class="fas fa-upload"></i> Simpan ke Cloud
+                        </button>
+                        <button class="btn-sync" id="btn-sync-from-cloud">
+                            <i class="fas fa-download"></i> Ambil dari Cloud
+                        </button>
+                    </div>
+                    <div class="sync-info">
+                        <p>Terakhir sinkron: <span id="last-sync">Belum pernah</span></p>
+                    </div>
+                </div>
             </aside>
 
-            <!-- Konten Utama dengan Tabs -->
+            <!-- Konten Utama dengan 4 Tabs -->
             <main class="content">
                 <div class="main-tabs">
                     <div class="tab-buttons">
                         <button class="tab-button active" data-tab="transaction-form">
-                            <i class="fas fa-plus-circle"></i> Tambah Transaksi
+                            <i class="fas fa-plus-circle"></i> Transaksi
                         </button>
                         <button class="tab-button" data-tab="transaction-list">
-                            <i class="fas fa-list-alt"></i> Rekap Transaksi
+                            <i class="fas fa-list-alt"></i> Rekap
                         </button>
                         <button class="tab-button" data-tab="savings">
-                            <i class="fas fa-piggy-bank"></i> Tabungan & Target
+                            <i class="fas fa-piggy-bank"></i> Tabungan
+                        </button>
+                        <button class="tab-button" data-tab="reminders-edit">
+                            <i class="fas fa-edit"></i> Edit Pengingat
                         </button>
                     </div>
                     
+                    <!-- Tab 1: Form Transaksi -->
                     <div class="tab-content active" id="transaction-form">
                         <div class="tab-section">
                             <h2><i class="fas fa-edit"></i> Form Transaksi Baru</h2>
@@ -172,6 +195,7 @@
                         </div>
                     </div>
                     
+                    <!-- Tab 2: Rekap Transaksi -->
                     <div class="tab-content" id="transaction-list">
                         <div class="tab-section">
                             <h2><i class="fas fa-history"></i> Riwayat Transaksi</h2>
@@ -189,13 +213,14 @@
                                     <div class="empty-state">
                                         <i class="fas fa-receipt"></i>
                                         <p>Belum ada transaksi</p>
-                                        <p class="empty-hint">Mulai tambahkan transaksi di tab "Tambah Transaksi"</p>
+                                        <p class="empty-hint">Mulai tambahkan transaksi di tab "Transaksi"</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
+                    <!-- Tab 3: Tabungan & Target -->
                     <div class="tab-content" id="savings">
                         <div class="tab-section">
                             <div class="savings-header">
@@ -240,7 +265,7 @@
                                                 <input type="color" id="target-color" value="#e50914">
                                             </div>
                                         </div>
-                                        <button class="btn-add-target">
+                                        <button class="btn-add-target" id="btn-add-target">
                                             <i class="fas fa-bullseye"></i> Tambah Target
                                         </button>
                                     </div>
@@ -286,6 +311,95 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- Tab 4: Edit Pengingat Rutin -->
+                    <div class="tab-content" id="reminders-edit">
+                        <div class="tab-section">
+                            <h2><i class="fas fa-bell"></i> Kelola Pengingat Rutin</h2>
+                            
+                            <div class="reminders-edit-content">
+                                <div class="reminders-list-edit">
+                                    <h3><i class="fas fa-list"></i> Daftar Pengingat Rutin</h3>
+                                    <div class="reminders-edit-container" id="reminders-edit-container">
+                                        <!-- Daftar pengingat untuk diedit akan dimuat di sini -->
+                                        <div class="empty-state">
+                                            <i class="fas fa-bell"></i>
+                                            <p>Belum ada pengingat rutin</p>
+                                            <p class="empty-hint">Tambahkan pengingat rutin baru di bawah</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="add-reminder-edit">
+                                    <h3><i class="fas fa-plus-circle"></i> Tambah/Ubah Pengingat</h3>
+                                    <form id="reminder-edit-form">
+                                        <input type="hidden" id="reminder-edit-id" value="">
+                                        
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label for="reminder-edit-name">Nama Pengingat *</label>
+                                                <input type="text" id="reminder-edit-name" placeholder="Contoh: Bayar Listrik" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="reminder-edit-category">Kategori *</label>
+                                                <select id="reminder-edit-category" required>
+                                                    <option value="">Pilih Kategori</option>
+                                                    <option value="listrik">Listrik & Air</option>
+                                                    <option value="internet">Internet & TV</option>
+                                                    <option value="kredit">Kredit/Kontrakan</option>
+                                                    <option value="asuransi">Asuransi</option>
+                                                    <option value="langganan">Langganan</option>
+                                                    <option value="cicilan">Cicilan</option>
+                                                    <option value="lainnya">Lainnya</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label for="reminder-edit-amount">Jumlah (Rp) *</label>
+                                                <input type="number" id="reminder-edit-amount" placeholder="Contoh: 500000" min="0" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="reminder-edit-date">Tanggal Bayar (1-31) *</label>
+                                                <input type="number" id="reminder-edit-date" placeholder="Contoh: 10" min="1" max="31" required>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label for="reminder-edit-duration">Durasi (bulan)</label>
+                                                <input type="number" id="reminder-edit-duration" placeholder="Contoh: 12 (untuk cicilan)" min="0">
+                                                <small class="input-hint">Isi 0 untuk pengingat tanpa batas waktu</small>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="reminder-edit-start-month">Mulai Bulan</label>
+                                                <input type="month" id="reminder-edit-start-month">
+                                                <small class="input-hint">Untuk menghitung sisa durasi</small>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label for="reminder-edit-description">Keterangan</label>
+                                            <textarea id="reminder-edit-description" placeholder="Tambahkan keterangan pengingat..." rows="2"></textarea>
+                                        </div>
+                                        
+                                        <div class="form-actions">
+                                            <button type="submit" class="btn-submit" id="btn-save-reminder">
+                                                <i class="fas fa-save"></i> Simpan Pengingat
+                                            </button>
+                                            <button type="button" class="btn-cancel" id="btn-cancel-reminder">
+                                                <i class="fas fa-times"></i> Batal
+                                            </button>
+                                            <button type="button" class="btn-delete" id="btn-delete-reminder" style="display: none;">
+                                                <i class="fas fa-trash"></i> Hapus
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </main>
 
@@ -294,46 +408,22 @@
                 <div class="sidebar-section">
                     <div class="reminders-header">
                         <h3><i class="fas fa-bell"></i> Pengingat Rutin</h3>
-                        <button class="btn-add-reminder-small" id="show-reminder-form">
-                            <i class="fas fa-plus"></i>
-                        </button>
+                        <span class="reminders-count" id="reminders-count">0</span>
                     </div>
                     
                     <div class="reminders-list" id="reminders-list">
                         <!-- Pengingat akan dimuat di sini -->
+                        <div class="empty-state-small">
+                            <i class="fas fa-bell"></i>
+                            <p>Belum ada pengingat</p>
+                        </div>
                     </div>
                     
-                    <div class="add-reminder-form" id="reminder-form" style="display: none;">
-                        <h4><i class="fas fa-plus-circle"></i> Tambah Pengingat</h4>
-                        <div class="form-group">
-                            <input type="text" id="reminder-name" placeholder="Nama pengingat">
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <input type="number" id="reminder-amount" placeholder="Jumlah (Rp)">
-                            </div>
-                            <div class="form-group">
-                                <input type="number" id="reminder-date" placeholder="Tanggal (1-31)" min="1" max="31">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <select id="reminder-category">
-                                <option value="">Pilih Kategori</option>
-                                <option value="listrik">Listrik & Air</option>
-                                <option value="internet">Internet & TV</option>
-                                <option value="kredit">Kredit/Kontrakan</option>
-                                <option value="asuransi">Asuransi</option>
-                                <option value="langganan">Langganan</option>
-                                <option value="lainnya">Lainnya</option>
-                            </select>
-                        </div>
-                        <div class="form-actions">
-                            <button class="btn-add-reminder">
-                                <i class="fas fa-bell"></i> Tambah
-                            </button>
-                            <button type="button" class="btn-cancel" id="cancel-reminder">
-                                Batal
-                            </button>
+                    <div class="upcoming-reminders">
+                        <h4><i class="fas fa-calendar-day"></i> Jatuh Tempo Dekat</h4>
+                        <div id="upcoming-reminders">
+                            <!-- Pengingat yang akan datang akan dimuat di sini -->
+                            <p class="no-upcoming">Tidak ada jatuh tempo dekat</p>
                         </div>
                     </div>
                 </div>
@@ -342,12 +432,14 @@
 
         <!-- Footer -->
         <footer class="footer">
-            <p>© 2023 FinTrack - Pelacak Keuangan & Tabungan Pribadi</p>
+            <p>© 2023 FinTrack Pro - Pelacak Keuangan & Tabungan Pribadi</p>
             <p class="footer-info">
-                Data disimpan di browser Anda | 
-                <button id="export-data">Ekspor Data</button> | 
-                <button id="import-data">Impor Data</button> | 
+                <span id="data-status">Data disimpan di browser Anda</span> | 
                 <button id="clear-data">Hapus Semua Data</button>
+            </p>
+            <p class="appscript-info">
+                <i class="fas fa-code"></i> Siap untuk Google Apps Script | 
+                <button id="test-connection">Test Koneksi</button>
             </p>
         </footer>
     </div>
@@ -364,17 +456,23 @@
         </div>
     </div>
 
-    <!-- Modal untuk impor data -->
-    <div class="modal" id="import-modal">
+    <!-- Modal untuk koneksi Google Apps Script -->
+    <div class="modal" id="connection-modal">
         <div class="modal-content">
-            <h3>Impor Data</h3>
+            <h3><i class="fab fa-google"></i> Google Apps Script</h3>
             <div class="form-group">
-                <label for="import-file">Pilih file backup (.json)</label>
-                <input type="file" id="import-file" accept=".json">
+                <label for="script-url">URL Script Deployment</label>
+                <input type="text" id="script-url" placeholder="https://script.google.com/macros/s/..." value="https://script.google.com/macros/s/AKfycbx.../exec">
+                <small class="input-hint">Dapatkan dari Google Apps Script setelah deploy</small>
             </div>
+            <div class="form-group">
+                <label for="api-key">API Key (Opsional)</label>
+                <input type="text" id="api-key" placeholder="Kunci API untuk keamanan">
+            </div>
+            <div class="connection-test-result" id="connection-test-result"></div>
             <div class="modal-actions">
-                <button class="btn-confirm" id="import-confirm">Impor</button>
-                <button class="btn-cancel" id="import-cancel">Batal</button>
+                <button class="btn-confirm" id="btn-save-script">Simpan URL</button>
+                <button class="btn-cancel" id="btn-cancel-script">Batal</button>
             </div>
         </div>
     </div>
