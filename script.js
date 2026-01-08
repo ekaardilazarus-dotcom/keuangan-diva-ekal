@@ -1,5 +1,5 @@
 // ============ GOOGLE APPS SCRIPT CONFIG ============
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw4KeS_4Q4Qqj7h5Rt5GxgGM27X_mLU_Sbq6blVNvsXrVVboAZuLdwjFGePyZtMstHgKA/exec';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyPfLpvP95bpojgmJkmtM3Jn4n_BhqgwtlqbaQ4tEymX2m6x8WaIUTavC8p4C-CY9bc9Q/exec';
 
 // ============ CORS PROXY SOLUTION ============
 // Gunakan CORS proxy untuk development
