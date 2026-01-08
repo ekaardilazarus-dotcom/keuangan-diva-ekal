@@ -1,0 +1,518 @@
+/* Reset dan Font */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Montserrat', sans-serif;
+    background-color: #141414;
+    color: #e5e5e5;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 15px;
+    background-color: #0a0a0a;
+    min-height: 100vh;
+}
+
+/* Header */
+.header {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(90deg, #e50914 0%, #b81d24 100%);
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.logo i {
+    font-size: 28px;
+}
+
+.logo h1 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.comparison {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.3);
+    padding: 12px;
+    border-radius: 6px;
+}
+
+.comparison-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 10px;
+}
+
+.comparison-label {
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 5px;
+    color: #b3b3b3;
+}
+
+.comparison-value {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.income-total {
+    color: #2ecc71;
+}
+
+.expense-total {
+    color: #e74c3c;
+}
+
+.balance {
+    color: #f1c40f;
+}
+
+/* Layout Utama */
+.main-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Sidebar */
+.sidebar {
+    background-color: #1a1a1a;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.sidebar h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 18px;
+    margin-bottom: 15px;
+    color: #e5e5e5;
+    border-bottom: 1px solid #333;
+    padding-bottom: 10px;
+}
+
+.sidebar-section {
+    margin-bottom: 25px;
+}
+
+.filter-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.filter-option label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 8px 10px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.filter-option label:hover {
+    background-color: #333;
+}
+
+.filter-option input[type="radio"] {
+    accent-color: #e50914;
+}
+
+.month-summary p {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #333;
+}
+
+.month-summary p:last-child {
+    border-bottom: none;
+    font-weight: 600;
+    color: #f1c40f;
+}
+
+/* Konten Utama */
+.content {
+    flex: 1;
+    background-color: #1a1a1a;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.content h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 20px;
+    margin-bottom: 20px;
+    color: #e5e5e5;
+}
+
+/* Form Input */
+.input-section {
+    margin-bottom: 30px;
+    padding-bottom: 25px;
+    border-bottom: 1px solid #333;
+}
+
+.form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+@media (min-width: 768px) {
+    .form-row {
+        flex-direction: row;
+    }
+    
+    .form-row .form-group {
+        flex: 1;
+    }
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #b3b3b3;
+}
+
+.form-group select,
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 12px 15px;
+    background-color: #333;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #fff;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
+}
+
+.form-group select:focus,
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #e50914;
+}
+
+.btn-submit {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(90deg, #e50914 0%, #b81d24 100%);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: opacity 0.2s;
+}
+
+.btn-submit:hover {
+    opacity: 0.9;
+}
+
+/* Tabs */
+.tabs {
+    display: flex;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #333;
+}
+
+.tab {
+    padding: 12px 20px;
+    background: none;
+    border: none;
+    color: #b3b3b3;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 15px;
+    cursor: pointer;
+    position: relative;
+}
+
+.tab.active {
+    color: #fff;
+    font-weight: 600;
+}
+
+.tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background-color: #e50914;
+}
+
+/* Daftar Transaksi */
+.transactions-list {
+    min-height: 200px;
+}
+
+.transaction-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background-color: #222;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    border-left: 4px solid #e50914;
+}
+
+.transaction-item.income {
+    border-left-color: #2ecc71;
+}
+
+.transaction-item.expense {
+    border-left-color: #e74c3c;
+}
+
+.transaction-info {
+    flex: 1;
+}
+
+.transaction-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+}
+
+.transaction-category {
+    font-weight: 600;
+    color: #e5e5e5;
+}
+
+.transaction-date {
+    font-size: 12px;
+    color: #b3b3b3;
+}
+
+.transaction-description {
+    font-size: 14px;
+    color: #b3b3b3;
+    margin-top: 5px;
+}
+
+.transaction-amount {
+    font-weight: 700;
+    font-size: 16px;
+}
+
+.transaction-income {
+    color: #2ecc71;
+}
+
+.transaction-expense {
+    color: #e74c3c;
+}
+
+.delete-btn {
+    background: none;
+    border: none;
+    color: #e50914;
+    cursor: pointer;
+    font-size: 16px;
+    margin-left: 10px;
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    color: #666;
+}
+
+.empty-state i {
+    font-size: 48px;
+    margin-bottom: 15px;
+    color: #444;
+}
+
+.hidden {
+    display: none;
+}
+
+/* Sidebar Kanan - Pengingat */
+.reminders-list {
+    margin-bottom: 25px;
+}
+
+.reminder-item {
+    background-color: #222;
+    padding: 15px;
+    margin-bottom: 12px;
+    border-radius: 6px;
+    border-left: 4px solid #f1c40f;
+}
+
+.reminder-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.reminder-header h4 {
+    font-size: 15px;
+    color: #e5e5e5;
+}
+
+.reminder-date {
+    font-size: 12px;
+    color: #b3b3b3;
+}
+
+.reminder-amount {
+    font-weight: 700;
+    color: #f1c40f;
+    font-size: 16px;
+}
+
+.add-reminder {
+    background-color: #222;
+    padding: 20px;
+    border-radius: 6px;
+}
+
+.add-reminder h4 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 15px;
+    color: #e5e5e5;
+}
+
+.btn-add-reminder {
+    width: 100%;
+    padding: 12px;
+    background-color: #333;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background-color 0.2s;
+}
+
+.btn-add-reminder:hover {
+    background-color: #444;
+}
+
+/* Footer */
+.footer {
+    text-align: center;
+    padding: 20px;
+    margin-top: 20px;
+    color: #666;
+    font-size: 14px;
+    border-top: 1px solid #333;
+}
+
+.footer-info {
+    margin-top: 8px;
+    font-size: 13px;
+}
+
+#clear-data {
+    background: none;
+    border: none;
+    color: #e50914;
+    cursor: pointer;
+    text-decoration: underline;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+}
+
+/* Responsivitas untuk Tablet dan Desktop */
+@media (min-width: 768px) {
+    .header {
+        flex-direction: row;
+    }
+    
+    .logo {
+        margin-bottom: 0;
+    }
+    
+    .comparison {
+        width: auto;
+        gap: 30px;
+    }
+    
+    .main-content {
+        flex-direction: row;
+    }
+    
+    .sidebar {
+        width: 25%;
+    }
+    
+    .content {
+        width: 50%;
+    }
+    
+    .right-sidebar {
+        width: 25%;
+    }
+}
+
+/* Responsivitas untuk Mobile */
+@media (max-width: 767px) {
+    .sidebar {
+        width: 100%;
+    }
+    
+    .content {
+        width: 100%;
+    }
+}
