@@ -37,8 +37,8 @@
                 </div>
             </div>
             <div class="sync-status" id="sync-status">
-                <i class="fas fa-sync-alt"></i>
-                <span>Local</span>
+                <i class="fas fa-laptop"></i>
+                <span>Lokal</span>
             </div>
         </header>
 
@@ -81,25 +81,37 @@
                 <div class="sidebar-section">
                     <h3><i class="fas fa-chart-pie"></i> Ringkasan Bulan Ini</h3>
                     <div class="month-summary">
-                        <p>Pemasukan: <span id="month-income">Rp 0</span></p>
-                        <p>Pengeluaran: <span id="month-expense">Rp 0</span></p>
-                        <p>Tabungan: <span id="month-saving">Rp 0</span></p>
-                        <p>Saldo: <span id="month-balance">Rp 0</span></p>
+                        <div class="summary-item">
+                            <span class="summary-label">Pemasukan:</span>
+                            <span class="summary-value" id="month-income">Rp 0</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Pengeluaran:</span>
+                            <span class="summary-value" id="month-expense">Rp 0</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Tabungan:</span>
+                            <span class="summary-value" id="month-saving">Rp 0</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Saldo:</span>
+                            <span class="summary-value" id="month-balance">Rp 0</span>
+                        </div>
                     </div>
                 </div>
                 
                 <div class="sidebar-section">
                     <h3><i class="fas fa-cloud"></i> Sinkronisasi</h3>
                     <div class="sync-controls">
-                        <button class="btn-sync" id="btn-sync-to-cloud">
-                            <i class="fas fa-upload"></i> Simpan ke Cloud
-                        </button>
                         <button class="btn-sync" id="btn-sync-from-cloud">
-                            <i class="fas fa-download"></i> Ambil dari Cloud
+                            <i class="fas fa-download"></i> Panggil Database
                         </button>
                     </div>
                     <div class="sync-info">
                         <p>Terakhir sinkron: <span id="last-sync">Belum pernah</span></p>
+                        <button class="btn-test" id="test-connection">
+                            <i class="fas fa-wifi"></i> Test Koneksi
+                        </button>
                     </div>
                 </div>
             </aside>
@@ -262,7 +274,7 @@
                                             </div>
                                             <div class="form-group">
                                                 <label for="target-color">Warna Target</label>
-                                                <input type="color" id="target-color" value="#e50914">
+                                                <input type="color" id="target-color" value="#4361ee">
                                             </div>
                                         </div>
                                         <button class="btn-add-target" id="btn-add-target">
@@ -437,10 +449,11 @@
                 <span id="data-status">Data disimpan di browser Anda</span> | 
                 <button id="clear-data">Hapus Semua Data</button>
             </p>
-            <p class="appscript-info">
-                <i class="fas fa-code"></i> Siap untuk Google Apps Script | 
-                <button id="test-connection">Test Koneksi</button>
-            </p>
+            <div class="footer-actions">
+                <button id="setup-sheets" class="btn-setup">
+                    <i class="fas fa-cogs"></i> Setup Google Sheets
+                </button>
+            </div>
         </footer>
     </div>
 
@@ -452,27 +465,6 @@
             <div class="modal-actions">
                 <button class="btn-confirm" id="modal-confirm">Ya</button>
                 <button class="btn-cancel" id="modal-cancel">Tidak</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal untuk koneksi Google Apps Script -->
-    <div class="modal" id="connection-modal">
-        <div class="modal-content">
-            <h3><i class="fab fa-google"></i> Google Apps Script</h3>
-            <div class="form-group">
-                <label for="script-url">URL Script Deployment</label>
-                <input type="text" id="script-url" placeholder="https://script.google.com/macros/s/..." value="https://script.google.com/macros/s/AKfycbx.../exec">
-                <small class="input-hint">Dapatkan dari Google Apps Script setelah deploy</small>
-            </div>
-            <div class="form-group">
-                <label for="api-key">API Key (Opsional)</label>
-                <input type="text" id="api-key" placeholder="Kunci API untuk keamanan">
-            </div>
-            <div class="connection-test-result" id="connection-test-result"></div>
-            <div class="modal-actions">
-                <button class="btn-confirm" id="btn-save-script">Simpan URL</button>
-                <button class="btn-cancel" id="btn-cancel-script">Batal</button>
             </div>
         </div>
     </div>
