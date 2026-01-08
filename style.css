@@ -50,13 +50,21 @@ body {
     color: #fff;
 }
 
+.logo-sub {
+    font-size: 16px;
+    font-weight: 400;
+    opacity: 0.9;
+}
+
 .comparison {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-around;
     width: 100%;
     background-color: rgba(0, 0, 0, 0.3);
     padding: 12px;
     border-radius: 6px;
+    gap: 10px;
 }
 
 .comparison-item {
@@ -64,6 +72,7 @@ body {
     flex-direction: column;
     align-items: center;
     padding: 0 10px;
+    min-width: 120px;
 }
 
 .comparison-label {
@@ -84,6 +93,10 @@ body {
 
 .expense-total {
     color: #e74c3c;
+}
+
+.savings-total {
+    color: #3498db;
 }
 
 .balance {
@@ -118,6 +131,31 @@ body {
 
 .sidebar-section {
     margin-bottom: 25px;
+}
+
+.reminders-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.btn-add-reminder-small {
+    background: #333;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.btn-add-reminder-small:hover {
+    background: #444;
 }
 
 .filter-options {
@@ -162,11 +200,67 @@ body {
     flex: 1;
     background-color: #1a1a1a;
     border-radius: 8px;
-    padding: 20px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
 }
 
-.content h2 {
+/* Tabs Utama */
+.main-tabs {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.tab-buttons {
+    display: flex;
+    background-color: #222;
+    border-bottom: 1px solid #333;
+}
+
+.tab-button {
+    flex: 1;
+    padding: 15px;
+    background: none;
+    border: none;
+    color: #b3b3b3;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.tab-button:hover {
+    background-color: #333;
+    color: #fff;
+}
+
+.tab-button.active {
+    background-color: #1a1a1a;
+    color: #fff;
+    font-weight: 600;
+    border-bottom: 3px solid #e50914;
+}
+
+.tab-content {
+    display: none;
+    padding: 20px;
+    height: 100%;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.tab-section {
+    height: 100%;
+}
+
+.tab-section h2 {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -176,12 +270,6 @@ body {
 }
 
 /* Form Input */
-.input-section {
-    margin-bottom: 30px;
-    padding-bottom: 25px;
-    border-bottom: 1px solid #333;
-}
-
 .form-row {
     display: flex;
     flex-direction: column;
@@ -230,8 +318,20 @@ body {
     border-color: #e50914;
 }
 
+.form-group input[type="color"] {
+    height: 45px;
+    padding: 5px;
+    cursor: pointer;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
 .btn-submit {
-    width: 100%;
+    flex: 2;
     padding: 14px;
     background: linear-gradient(90deg, #e50914 0%, #b81d24 100%);
     color: white;
@@ -252,41 +352,68 @@ body {
     opacity: 0.9;
 }
 
-/* Tabs */
-.tabs {
+.btn-cancel {
+    flex: 1;
+    padding: 14px;
+    background-color: #333;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
     display: flex;
-    margin-bottom: 20px;
-    border-bottom: 1px solid #333;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background-color 0.2s;
 }
 
-.tab {
-    padding: 12px 20px;
+.btn-cancel:hover {
+    background-color: #444;
+}
+
+/* Filter Transaksi */
+.transaction-filter {
+    margin-bottom: 20px;
+}
+
+.filter-buttons {
+    display: flex;
+    background-color: #222;
+    border-radius: 6px;
+    padding: 5px;
+}
+
+.filter-btn {
+    flex: 1;
+    padding: 10px 15px;
     background: none;
     border: none;
     color: #b3b3b3;
     font-family: 'Montserrat', sans-serif;
     font-weight: 500;
-    font-size: 15px;
     cursor: pointer;
-    position: relative;
+    border-radius: 4px;
+    transition: all 0.2s;
 }
 
-.tab.active {
+.filter-btn.active {
+    background-color: #333;
     color: #fff;
     font-weight: 600;
 }
 
-.tab.active::after {
-    content: '';
-    position: absolute;
-    bottom: -1px;
-    left: 0;
-    width: 100%;
-    height: 3px;
-    background-color: #e50914;
+/* Daftar Transaksi */
+.transactions-container {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 10px;
 }
 
-/* Daftar Transaksi */
 .transactions-list {
     min-height: 200px;
 }
@@ -308,6 +435,10 @@ body {
 
 .transaction-item.expense {
     border-left-color: #e74c3c;
+}
+
+.transaction-item.saving {
+    border-left-color: #3498db;
 }
 
 .transaction-info {
@@ -350,6 +481,10 @@ body {
     color: #e74c3c;
 }
 
+.transaction-saving {
+    color: #3498db;
+}
+
 .delete-btn {
     background: none;
     border: none;
@@ -366,6 +501,7 @@ body {
     justify-content: center;
     padding: 40px 20px;
     color: #666;
+    text-align: center;
 }
 
 .empty-state i {
@@ -374,53 +510,158 @@ body {
     color: #444;
 }
 
-.hidden {
-    display: none;
+.empty-hint {
+    font-size: 13px;
+    margin-top: 5px;
+    color: #555;
 }
 
-/* Sidebar Kanan - Pengingat */
-.reminders-list {
+/* Tabungan & Target */
+.savings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.total-savings {
+    background: linear-gradient(90deg, #3498db 0%, #2980b9 100%);
+    padding: 12px 20px;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.total-label {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 5px;
+}
+
+.total-amount {
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+}
+
+.savings-content {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+@media (min-width: 992px) {
+    .savings-content {
+        flex-direction: row;
+    }
+    
+    .savings-targets {
+        flex: 1;
+    }
+    
+    .savings-progress {
+        flex: 1;
+    }
+}
+
+.targets-list {
     margin-bottom: 25px;
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 10px;
 }
 
-.reminder-item {
+.target-item {
     background-color: #222;
     padding: 15px;
     margin-bottom: 12px;
     border-radius: 6px;
-    border-left: 4px solid #f1c40f;
+    border-left: 4px solid #e50914;
+    position: relative;
 }
 
-.reminder-header {
+.target-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
 }
 
-.reminder-header h4 {
-    font-size: 15px;
+.target-name {
+    font-weight: 600;
     color: #e5e5e5;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.reminder-date {
-    font-size: 12px;
-    color: #b3b3b3;
+.target-color {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
 }
 
-.reminder-amount {
+.target-amount {
     font-weight: 700;
     color: #f1c40f;
     font-size: 16px;
 }
 
-.add-reminder {
+.target-progress {
+    margin-top: 10px;
+}
+
+.progress-bar {
+    height: 8px;
+    background-color: #333;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 5px;
+}
+
+.progress-fill {
+    height: 100%;
+    background-color: #3498db;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #b3b3b3;
+}
+
+.delete-target-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    color: #e50914;
+    cursor: pointer;
+    font-size: 14px;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.delete-target-btn:hover {
+    opacity: 1;
+}
+
+.add-target-form {
     background-color: #222;
     padding: 20px;
     border-radius: 6px;
+    margin-top: 20px;
 }
 
-.add-reminder h4 {
+.add-target-form h4 {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -428,10 +669,10 @@ body {
     color: #e5e5e5;
 }
 
-.btn-add-reminder {
+.btn-add-target {
     width: 100%;
     padding: 12px;
-    background-color: #333;
+    background-color: #3498db;
     color: white;
     border: none;
     border-radius: 4px;
@@ -445,74 +686,112 @@ body {
     transition: background-color 0.2s;
 }
 
-.btn-add-reminder:hover {
-    background-color: #444;
+.btn-add-target:hover {
+    background-color: #2980b9;
 }
 
-/* Footer */
-.footer {
-    text-align: center;
+.progress-container {
+    background-color: #222;
     padding: 20px;
-    margin-top: 20px;
-    color: #666;
-    font-size: 14px;
-    border-top: 1px solid #333;
+    border-radius: 6px;
+    margin-bottom: 20px;
 }
 
-.footer-info {
-    margin-top: 8px;
-    font-size: 13px;
+.progress-info {
+    color: #b3b3b3;
+    text-align: center;
+    font-style: italic;
 }
 
-#clear-data {
-    background: none;
-    border: none;
-    color: #e50914;
-    cursor: pointer;
-    text-decoration: underline;
-    font-family: 'Montserrat', sans-serif;
-    font-size: 13px;
+.savings-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
 }
 
-/* Responsivitas untuk Tablet dan Desktop */
-@media (min-width: 768px) {
-    .header {
-        flex-direction: row;
-    }
-    
-    .logo {
-        margin-bottom: 0;
-    }
-    
-    .comparison {
-        width: auto;
-        gap: 30px;
-    }
-    
-    .main-content {
-        flex-direction: row;
-    }
-    
-    .sidebar {
-        width: 25%;
-    }
-    
-    .content {
-        width: 50%;
-    }
-    
-    .right-sidebar {
-        width: 25%;
-    }
+.stat-card {
+    background-color: #222;
+    padding: 15px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
 }
 
-/* Responsivitas untuk Mobile */
-@media (max-width: 767px) {
-    .sidebar {
-        width: 100%;
-    }
-    
-    .content {
-        width: 100%;
-    }
+.stat-icon {
+    background-color: #333;
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
 }
+
+.stat-icon .fa-wallet {
+    color: #3498db;
+}
+
+.stat-icon .fa-calendar-check {
+    color: #2ecc71;
+}
+
+.stat-icon .fa-percentage {
+    color: #f1c40f;
+}
+
+.stat-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #b3b3b3;
+    margin-bottom: 5px;
+}
+
+.stat-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #e5e5e5;
+}
+
+/* Sidebar Kanan - Pengingat */
+.reminders-list {
+    margin-bottom: 25px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.reminder-item {
+    background-color: #222;
+    padding: 15px;
+    margin-bottom: 12px;
+    border-radius: 6px;
+    border-left: 4px solid #f1c40f;
+    position: relative;
+}
+
+.reminder-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.reminder-name {
+    font-weight: 600;
+    color: #e5e5e5;
+    font-size: 15px;
+}
+
+.reminder-date {
+    font-size: 12px;
+    color: #b3b3b3;
+}
+
+.reminder-amount {
+    font-weight: 700;
+    color
