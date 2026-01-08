@@ -878,4 +878,58 @@ function showNotification(message, type) {
         animation: slideIn 0.3s ease;
     `;
     
-    // Tamb
+    // Tambahkan style untuk animasi
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Tambahkan ke body
+    document.body.appendChild(notification);
+    
+    // Hapus notifikasi setelah 3 detik
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Fungsi untuk memformat angka
+function formatNumber(num) {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
+// Fungsi untuk memformat tanggal
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const options = { day: 'numeric', month: 'short', year: 'numeric' };
+    return date.toLocaleDateString('id-ID', options);
+}
+
+// Fungsi untuk memformat kategori
+function formatCategory(category) {
+    const categoryNames = {
+        'gaji': 'Gaji',
+        'investasi': 'Investasi',
+        'hibah': 'Hibah/Hadiah',
+        'makanan': 'Makanan & Minuman',
+        'transportasi': 'Transportasi',
+        'belanja': 'Belanja',
+        'hiburan': 'Hiburan',
+        'kesehatan': 'Kesehatan',
+        'pendidikan': 'Pendidikan',
+        'lainnya': 'Lainnya',
+        'tabungan': 'Tabungan Umum',
+        'listrik': 'Listrik & Air',
+        'internet': 'Internet & TV',
+        'kredit': 'Kredit/Kontrakan',
+        'asuransi': 'Asuransi',
+        'langganan': 'Langganan'
+    };
+    
+    return categoryNames[category] || category;
+}
