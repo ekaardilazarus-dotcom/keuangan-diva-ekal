@@ -1,5 +1,5 @@
 // Konfigurasi
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyBYLcuNCniugdG32GAlqOOOqzWRt9fDFIVL9pg6IlNe_vMot0dVsWZkE3yKgapWPu3dw/exec'; // Ganti dengan URL deploy Anda
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby6Ot3Jh8Kz8eIgtoWj2xVk7N8gwMHxi6TdndXBUbvylqtJmMEQraeBRUkgD9bEJECTvQ/exec'; // Ganti dengan URL deploy Anda
 
 // State aplikasi
 let appData = {
