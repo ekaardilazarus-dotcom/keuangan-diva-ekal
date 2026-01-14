@@ -33,13 +33,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     // Load data dari localStorage
     loadLocalData();
+   // Inisialisasi dropdown kategori
+    setupCategoryDropdown();
     
     // Setup event listeners
     setupEventListeners();
-    
-    // Inisialisasi dropdown kategori
-    setupCategoryDropdown();
-    
+ 
     // Load data awal
     loadSummary();
     loadTransactions('month');
@@ -220,17 +219,25 @@ function updateCategoryOptions(selectedType) {
         }
     }
 }
-
-
-function addCategoryOption(value, text) {
-    const categorySelect = document.getElementById('category');
-    if (!categorySelect) return;
-    const option = document.createElement('option');
-    option.value = value;
-    option.textContent = text;
-    categorySelect.appendChild(option);
+function toggleSavingTarget() {
+    const type = document.getElementById('transaction-type').value;
+    const container = document.getElementById('saving-target-container');
+    
+    // Tampilkan/sembunyikan container target tabungan
+    if (container) {
+        container.style.display = type === 'saving' ? 'block' : 'none';
+    }
+    
+    // Auto-pilih kategori "tabungan" jika jenis adalah saving
+    if (type === 'saving') {
+        setTimeout(() => {
+            const categorySelect = document.getElementById('category');
+            if (categorySelect) {
+                categorySelect.value = 'tabungan';
+            }
+        }, 100);
+    }
 }
-
 // Fungsi untuk switch tab
 function switchTab(tabId) {
     console.log('Switching to tab:', tabId);
