@@ -22,8 +22,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // Set tanggal default di form
     const today = new Date();
     const dateInput = document.getElementById('date');
-    if (dateInput) dateInput.valueAsDate = today;
-    
+    if (dateInput) {
+        dateInput.valueAsDate = today;
+        // Format YYYY-MM-DD
+        dateInput.value = today.toISOString().split('T')[0];
+    }
+        const transType = document.getElementById('transaction-type');
+    if (transType) {
+        updateCategoryOptions(transType.value);
+    }
     // Load data dari localStorage
     loadLocalData();
     
@@ -105,7 +112,8 @@ function setupEventListeners() {
     // Type dropdown untuk kategori
     const transType = document.getElementById('transaction-type');
     if (transType) {
-        transType.addEventListener('change', function() {
+       transType.addEventListener('change', function() {
+            console.log('Transaction type changed to:', this.value);
             updateCategoryOptions(this.value);
             toggleSavingTarget();
         });
@@ -153,40 +161,65 @@ function updateCategoryOptions(selectedType) {
     // Reset dropdown
     categorySelect.innerHTML = '<option value="">Pilih Kategori</option>';
     
-    // Tambahkan kategori berdasarkan jenis
+    // Array kategori berdasarkan jenis
+    let categories = [];
+    
     if (selectedType === 'income') {
-        addCategoryOption('gaji', 'Gaji');
-        addCategoryOption('investasi', 'Investasi');
-        addCategoryOption('hibah', 'Hibah/Hadiah');
-        addCategoryOption('lainnya', 'Lainnya (Pemasukan)');
+        categories = [
+            { value: 'gaji', text: 'Gaji' },
+            { value: 'investasi', text: 'Investasi' },
+            { value: 'hibah', text: 'Hibah/Hadiah' },
+            { value: 'lainnya', text: 'Lainnya (Pemasukan)' }
+        ];
     } else if (selectedType === 'expense') {
-        addCategoryOption('makanan', 'Makanan & Minuman');
-        addCategoryOption('transportasi', 'Transportasi');
-        addCategoryOption('belanja', 'Belanja');
-        addCategoryOption('hiburan', 'Hiburan');
-        addCategoryOption('kesehatan', 'Kesehatan');
-        addCategoryOption('pendidikan', 'Pendidikan');
-        addCategoryOption('lainnya', 'Lainnya (Pengeluaran)');
+        categories = [
+            { value: 'makanan', text: 'Makanan & Minuman' },
+            { value: 'transportasi', text: 'Transportasi' },
+            { value: 'belanja', text: 'Belanja' },
+            { value: 'hiburan', text: 'Hiburan' },
+            { value: 'kesehatan', text: 'Kesehatan' },
+            { value: 'pendidikan', text: 'Pendidikan' },
+            { value: 'lainnya', text: 'Lainnya (Pengeluaran)' }
+        ];
     } else if (selectedType === 'saving') {
-        addCategoryOption('tabungan', 'Tabungan Umum');
+        categories = [
+            { value: 'tabungan', text: 'Tabungan Umum' }
+        ];
     } else {
-        // Default show all
-        addCategoryOption('gaji', 'Gaji');
-        addCategoryOption('investasi', 'Investasi');
-        addCategoryOption('hibah', 'Hibah/Hadiah');
-        addCategoryOption('makanan', 'Makanan & Minuman');
-        addCategoryOption('transportasi', 'Transportasi');
-        addCategoryOption('belanja', 'Belanja');
-        addCategoryOption('hiburan', 'Hiburan');
-        addCategoryOption('kesehatan', 'Kesehatan');
-        addCategoryOption('pendidikan', 'Pendidikan');
-        addCategoryOption('tabungan', 'Tabungan Umum');
+        // Default show semua kategori
+        categories = [
+            { value: 'gaji', text: 'Gaji' },
+            { value: 'investasi', text: 'Investasi' },
+            { value: 'hibah', text: 'Hibah/Hadiah' },
+            { value: 'makanan', text: 'Makanan & Minuman' },
+            { value: 'transportasi', text: 'Transportasi' },
+            { value: 'belanja', text: 'Belanja' },
+            { value: 'hiburan', text: 'Hiburan' },
+            { value: 'kesehatan', text: 'Kesehatan' },
+            { value: 'pendidikan', text: 'Pendidikan' },
+            { value: 'tabungan', text: 'Tabungan Umum' },
+            { value: 'lainnya', text: 'Lainnya' }
+        ];
     }
     
+    // Tambahkan opsi ke dropdown
+    categories.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat.value;
+        option.textContent = cat.text;
+        option.className = `${selectedType}-option`; // Tambahkan kelas
+        categorySelect.appendChild(option);
+    });
+    
     // Setel kembali nilai yang dipilih jika masih ada
-    if (currentValue && categorySelect.querySelector(`option[value="${currentValue}"]`)) {
-        categorySelect.value = currentValue;
+    if (currentValue) {
+        // Cari apakah nilai lama masih valid
+        const stillValid = categories.some(cat => cat.value === currentValue);
+        if (stillValid) {
+            categorySelect.value = currentValue;
+        }
     }
+}
 }
 
 function addCategoryOption(value, text) {
@@ -703,11 +736,21 @@ function populateSavingTargetDropdown() {
 function toggleSavingTarget() {
     const type = document.getElementById('transaction-type').value;
     const container = document.getElementById('saving-target-container');
+    
+    // Tampilkan/sembunyikan container target tabungan
     if (container) {
         container.style.display = type === 'saving' ? 'block' : 'none';
     }
-    // Update category when type changes
-    updateCategoryOptions(type);
+    
+    // Auto-pilih kategori "tabungan" jika jenis adalah saving
+    if (type === 'saving') {
+        setTimeout(() => {
+            const categorySelect = document.getElementById('category');
+            if (categorySelect) {
+                categorySelect.value = 'tabungan';
+            }
+        }, 100);
+    }
 }
 
 function updateSavingsProgress() {
