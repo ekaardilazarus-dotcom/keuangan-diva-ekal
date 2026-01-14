@@ -321,9 +321,11 @@ function saveTransaction(e) {
     });
     
     resetForm();
+    calculateLocalSummary()
     updateUI();
     loadTransactions();
-    loadSummary();
+    updateSavingsProgress()
+   
     
     if (navigator.onLine) {
         syncTransactionToCloud(transaction);
@@ -561,19 +563,44 @@ function loadLocalTransactions(filter = 'month') {
     renderTransactions(appData.transactions);
 }
 
-// ===== FUNGSI TABUNGAN =====
-
 function loadSavingsTargets() {
+    // Load dari localStorage dulu
     const localTargets = JSON.parse(localStorage.getItem('fintrack_savings_targets') || '[]');
-    appData.savingsTargets = localTargets.map(t => ({
-        ...t,
-        progress: t.target > 0 ? Math.min(Math.round((t.current || 0) / t.target * 100), 100) : 0
-    }));
+    
+    // Hitung total tabungan aktual
+    const allTransactions = JSON.parse(localStorage.getItem('fintrack_transactions') || '[]');
+    let totalActualSavings = 0;
+    
+    allTransactions.forEach(transaction => {
+        if (transaction.type === 'saving') {
+            totalActualSavings += parseFloat(transaction.amount) || 0;
+        }
+    });
+    
+    // Update current amount di setiap target berdasarkan proporsi
+    let totalTargetAmount = 0;
+    localTargets.forEach(target => {
+        totalTargetAmount += target.target || 0;
+    });
+    
+    appData.savingsTargets = localTargets.map(t => {
+        let current = 0;
+        if (totalTargetAmount > 0) {
+            current = Math.round((t.target / totalTargetAmount) * totalActualSavings) || 0;
+        }
+        
+        return {
+            ...t,
+            current: current,
+            progress: t.target > 0 ? Math.min(Math.round((current || 0) / t.target * 100), 100) : 0
+        };
+    });
     
     renderSavingsTargets();
     populateSavingTargetDropdown();
     updateSavingsProgress();
     
+    // Sync dari cloud jika online
     if (navigator.onLine) {
         fetch(`${SCRIPT_URL}?action=getSavingsTargets`)
             .then(response => response.json())
@@ -583,6 +610,8 @@ function loadSavingsTargets() {
                     renderSavingsTargets();
                     populateSavingTargetDropdown();
                     updateSavingsProgress();
+                    
+                    // Simpan ke localStorage
                     localStorage.setItem('fintrack_savings_targets', JSON.stringify(result.data));
                 }
             })
@@ -590,14 +619,6 @@ function loadSavingsTargets() {
                 console.log('Failed to load savings from cloud:', error);
             });
     }
-}
-
-function loadLocalSavingsTargets() {
-    const localTargets = JSON.parse(localStorage.getItem('fintrack_savings_targets') || '[]');
-    appData.savingsTargets = localTargets;
-    renderSavingsTargets();
-    populateSavingTargetDropdown();
-    updateSavingsProgress();
 }
 
 function renderSavingsTargets() {
@@ -709,14 +730,20 @@ function populateSavingTargetDropdown() {
     if (!dropdown) return;
     
     dropdown.innerHTML = '<option value="">Pilih Target Tabungan</option>';
+    
+    // Tambahkan opsi "Tabungan Umum" untuk transaksi tabungan tanpa target spesifik
+    const generalOption = document.createElement('option');
+    generalOption.value = 'umum';
+    generalOption.textContent = 'Tabungan Umum (Tanpa Target)';
+    dropdown.appendChild(generalOption);
+    
     appData.savingsTargets.forEach(target => {
         const option = document.createElement('option');
         option.value = target.id || target.nama || target.name;
-        option.textContent = target.nama || target.name;
+        option.textContent = `${target.nama || target.name} (${formatCurrency(target.target || 0)})`;
         dropdown.appendChild(option);
     });
 }
-
 function updateSavingsProgress() {
     const container = document.getElementById('progress-container');
     if (!container) return;
@@ -726,15 +753,34 @@ function updateSavingsProgress() {
         return;
     }
     
-    let totalTarget = 0;
-    let totalCurrent = 0;
+    // PERBAIKAN: Hitung total tabungan AKTUAL dari transaksi, bukan dari target
+    const allTransactions = JSON.parse(localStorage.getItem('fintrack_transactions') || '[]');
+    let totalActualSavings = 0;
     
-    appData.savingsTargets.forEach(t => {
-        totalTarget += t.target || 0;
-        totalCurrent += t.current || 0;
+    // Hitung total tabungan dari semua transaksi bertipe 'saving'
+    allTransactions.forEach(transaction => {
+        if (transaction.type === 'saving') {
+            totalActualSavings += parseFloat(transaction.amount) || 0;
+        }
     });
     
-    const totalPercent = totalTarget > 0 ? Math.round((totalCurrent / totalTarget) * 100) : 0;
+    // Update current amount di setiap target tabungan
+    let totalTargetAmount = 0;
+    let totalCurrentAmount = 0;
+    
+    appData.savingsTargets.forEach(target => {
+        totalTargetAmount += target.target || 0;
+        
+        // PERBAIKAN: Hitung current berdasarkan proporsi total tabungan
+        if (totalTargetAmount > 0) {
+            target.current = Math.round((target.target / totalTargetAmount) * totalActualSavings) || 0;
+        }
+        
+        target.progress = target.target > 0 ? Math.min(Math.round((target.current || 0) / target.target * 100), 100) : 0;
+        totalCurrentAmount += target.current || 0;
+    });
+    
+    const totalPercent = totalTargetAmount > 0 ? Math.round((totalCurrentAmount / totalTargetAmount) * 100) : 0;
     
     container.innerHTML = `
         <div class="overall-progress">
@@ -746,23 +792,48 @@ function updateSavingsProgress() {
                 <div class="progress-fill" style="width: ${totalPercent}%"></div>
             </div>
             <div class="progress-stats">
-                <span>${formatCurrency(totalCurrent)}</span>
-                <span>dari ${formatCurrency(totalTarget)}</span>
+                <span>${formatCurrency(totalActualSavings)}</span>
+                <span>dari ${formatCurrency(totalTargetAmount)}</span>
             </div>
         </div>
     `;
     
+    // PERBAIKAN: Update total tabungan di summary
+    appData.summary.saving = totalActualSavings;
+    
+    // Update stats cards
     const totalAmountEl = document.getElementById('total-savings-amount');
-    if (totalAmountEl) totalAmountEl.textContent = formatCurrency(totalCurrent);
+    if (totalAmountEl) totalAmountEl.textContent = formatCurrency(totalActualSavings);
     
     const monthlySavingsEl = document.getElementById('monthly-savings');
-    if (monthlySavingsEl) monthlySavingsEl.textContent = formatCurrency(appData.summary.saving);
+    if (monthlySavingsEl) {
+        // Hitung tabungan bulan ini
+        const today = new Date();
+        const currentMonth = today.getMonth();
+        const currentYear = today.getFullYear();
+        const monthlyTransactions = allTransactions.filter(t => {
+            if (t.type !== 'saving') return false;
+            const transDate = new Date(t.date);
+            return transDate.getMonth() === currentMonth && 
+                   transDate.getFullYear() === currentYear;
+        });
+        
+        let monthlySavings = 0;
+        monthlyTransactions.forEach(t => {
+            monthlySavings += parseFloat(t.amount) || 0;
+        });
+        
+        monthlySavingsEl.textContent = formatCurrency(monthlySavings);
+    }
     
     const achievedTargetsEl = document.getElementById('achieved-targets');
     if (achievedTargetsEl) {
         const achieved = appData.savingsTargets.filter(t => (t.current || 0) >= (t.target || 0)).length;
         achievedTargetsEl.textContent = achieved;
     }
+    
+    // Simpan perubahan ke localStorage
+    localStorage.setItem('fintrack_savings_targets', JSON.stringify(appData.savingsTargets));
 }
 
 // ===== FUNGSI PENGINGAT =====
@@ -960,6 +1031,7 @@ function calculateLocalSummary() {
         );
     }
     
+    // Hitung untuk periode yang dipilih
     let periodIncome = 0;
     let periodExpense = 0;
     let periodSaving = 0;
@@ -972,40 +1044,26 @@ function calculateLocalSummary() {
         else if (type === 'saving') periodSaving += amount;
     });
     
+    // PERBAIKAN: Hitung total tabungan dari SEMUA transaksi (bukan hanya periode tertentu)
+    let totalSavings = 0;
+    allTransactions.forEach(t => {
+        if (t.type === 'saving') {
+            totalSavings += parseFloat(t.amount) || 0;
+        }
+    });
+    
     const totalBalance = calculateLocalTotalBalance();
     
     appData.summary = {
         income: periodIncome,
         expense: periodExpense,
-        saving: periodSaving,
+        saving: totalSavings, // Gunakan total tabungan, bukan tabungan periode
         balance: totalBalance
     };
     
     console.log('Summary calculated:', appData.summary);
     updateSummaryUI();
 }
-
-function updateSummaryUI() {
-    console.log('Updating summary UI:', appData.summary);
-    
-    const incomeTotalEls = document.querySelectorAll('.income-total');
-    incomeTotalEls.forEach(el => el.textContent = formatCurrency(appData.summary.income));
-    
-    const expenseTotalEls = document.querySelectorAll('.expense-total');
-    expenseTotalEls.forEach(el => el.textContent = formatCurrency(appData.summary.expense));
-    
-    const savingsTotalEls = document.querySelectorAll('.savings-total');
-    savingsTotalEls.forEach(el => el.textContent = formatCurrency(appData.summary.saving));
-    
-    const balanceEls = document.querySelectorAll('.balance');
-    balanceEls.forEach(el => el.textContent = formatCurrency(appData.summary.balance));
-    
-    const totalSavingsAmountEl = document.getElementById('total-savings-amount');
-    if (totalSavingsAmountEl) {
-        totalSavingsAmountEl.textContent = formatCurrency(appData.summary.saving);
-    }
-}
-
 async function loadSummary() {
     calculateLocalSummary();
     
@@ -1026,6 +1084,46 @@ async function loadSummary() {
         }
     }
 }
+
+
+function updateSummaryUI() {
+    console.log('Updating summary UI:', appData.summary);
+    
+    // PERBARUI SUMMARY DARI DATA TERBARU
+    const allTransactions = JSON.parse(localStorage.getItem('fintrack_transactions') || '[]');
+    let totalSavings = 0;
+    
+    // Hitung ulang total tabungan
+    allTransactions.forEach(t => {
+        if (t.type === 'saving') {
+            totalSavings += parseFloat(t.amount) || 0;
+        }
+    });
+    
+    // Update appData.summary
+    appData.summary.saving = totalSavings;
+    
+    // Update UI
+    const incomeTotalEls = document.querySelectorAll('.income-total');
+    incomeTotalEls.forEach(el => el.textContent = formatCurrency(appData.summary.income));
+    
+    const expenseTotalEls = document.querySelectorAll('.expense-total');
+    expenseTotalEls.forEach(el => el.textContent = formatCurrency(appData.summary.expense));
+    
+    const savingsTotalEls = document.querySelectorAll('.savings-total');
+    savingsTotalEls.forEach(el => el.textContent = formatCurrency(appData.summary.saving));
+    
+    const balanceEls = document.querySelectorAll('.balance');
+    balanceEls.forEach(el => el.textContent = formatCurrency(appData.summary.balance));
+    
+    const totalSavingsAmountEl = document.getElementById('total-savings-amount');
+    if (totalSavingsAmountEl) {
+        totalSavingsAmountEl.textContent = formatCurrency(appData.summary.saving);
+    }
+    
+    console.log('Summary UI updated. Total savings:', appData.summary.saving);
+}
+
 
 // ===== SYNC FUNCTIONS =====
 
