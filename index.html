@@ -63,37 +63,8 @@
         </header>
 
         <div class="main-content">
-            <!-- Sidebar Kiri: Filter dan Jenis -->
-            <aside class="sidebar left-sidebar">
-                <div class="sidebar-section">
-                    <h3><i class="fas fa-cloud"></i> Sinkronisasi</h3>
-                    <div class="sync-controls">
-                        <button class="btn-sync" id="btn-sync-from-cloud">
-                            <i class="fas fa-download"></i> Panggil Database
-                        </button>
-                    </div>
-                    <div class="sync-info">
-                        <p>Terakhir sinkron: <span id="last-sync">Belum pernah</span></p>
-                    </div>
-                </div>
-
-                <div class="sidebar-section">
-                    <h3><i class="fas fa-filter"></i> Filter Data</h3>
-                    <div class="filter-options">
-                        <div class="filter-option">
-                            <label><input type="radio" name="type" value="all" checked> Semua</label>
-                        </div>
-                        <div class="filter-option">
-                            <label><input type="radio" name="type" value="income"> Pemasukan</label>
-                        </div>
-                        <div class="filter-option">
-                            <label><input type="radio" name="type" value="expense"> Pengeluaran</label>
-                        </div>
-                        <div class="filter-option">
-                            <label><input type="radio" name="type" value="saving"> Tabungan</label>
-                        </div>
-                    </div>
-                </div>
+            <!-- Sidebar Kiri Kosong -->
+            <aside class="sidebar left-sidebar" style="display: none;">
             </aside>
 
             <!-- Konten Utama dengan 4 Tabs -->
@@ -190,12 +161,38 @@
                     <!-- Tab 2: Rekap Transaksi -->
                     <div class="tab-content" id="transaction-list">
                         <div class="tab-section">
-                            <h2><i class="fas fa-history"></i> Riwayat Transaksi</h2>
-                            <div class="transaction-filter">
-                                <div class="filter-buttons">
-                                    <button class="filter-btn active" data-filter="day">Hari Ini</button>
-                                    <button class="filter-btn" data-filter="month">Bulan Ini</button>
-                                    <button class="filter-btn" data-filter="year">Tahun Ini</button>
+                            <div class="section-header">
+                                <h2><i class="fas fa-history"></i> Riwayat Transaksi</h2>
+                                <div class="transaction-filter-group">
+                                    <div class="filter-item">
+                                        <label>Periode:</label>
+                                        <div class="filter-buttons">
+                                            <button class="filter-btn active" data-filter="day">Hari Ini</button>
+                                            <button class="filter-btn" data-filter="month">Bulan Ini</button>
+                                            <button class="filter-btn" data-filter="year">Tahun Ini</button>
+                                        </div>
+                                    </div>
+                                    <div class="filter-item">
+                                        <label>Jenis:</label>
+                                        <div class="type-filter-options">
+                                            <label class="type-filter-btn">
+                                                <input type="radio" name="type-list" value="all" checked>
+                                                <span>Semua</span>
+                                            </label>
+                                            <label class="type-filter-btn">
+                                                <input type="radio" name="type-list" value="income">
+                                                <span>Pemasukan</span>
+                                            </label>
+                                            <label class="type-filter-btn">
+                                                <input type="radio" name="type-list" value="expense">
+                                                <span>Pengeluaran</span>
+                                            </label>
+                                            <label class="type-filter-btn">
+                                                <input type="radio" name="type-list" value="saving">
+                                                <span>Tabungan</span>
+                                            </label>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -395,8 +392,20 @@
                 </div>
             </main>
 
-            <!-- Sidebar Kanan: Pengingat Rutin -->
+            <!-- Sidebar Kanan: Info & Pengingat -->
             <aside class="sidebar right-sidebar">
+                <div class="sidebar-section">
+                    <h3><i class="fas fa-cloud"></i> Sinkronisasi</h3>
+                    <div class="sync-controls">
+                        <button class="btn-sync" id="btn-sync-from-cloud">
+                            <i class="fas fa-download"></i> Panggil Database
+                        </button>
+                    </div>
+                    <div class="sync-info">
+                        <p>Terakhir sinkron: <span id="last-sync">Belum pernah</span></p>
+                    </div>
+                </div>
+
                 <div class="sidebar-section">
                     <div class="reminders-header">
                         <h3><i class="fas fa-bell"></i> Pengingat Rutin</h3>
@@ -426,8 +435,7 @@
         <footer class="footer">
             <p>© 2023 FinTrack Pro - Pelacak Keuangan & Tabungan Pribadi</p>
             <p class="footer-info">
-                <span id="data-status">Data disimpan di browser Anda</span> | 
-                <button id="clear-data">Hapus Semua Data</button>
+                <span id="data-status">Terhubung ke Database Cloud</span>
             </p>
         </footer>
     </div>
