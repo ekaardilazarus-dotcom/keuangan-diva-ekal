@@ -562,17 +562,17 @@
 }
 
 /* ============ FIX CATEGORY OPTIONS VISIBILITY ============ */
-.income-option,
-.expense-option,
-.saving-option {
+#category option.income-option,
+#category option.expense-option,
+#category option.saving-option {
     display: none;
 }
 
-/* Tampilkan berdasarkan jenis transaksi yang dipilih */
-#transaction-type:not(:checked) ~ * .income-option,
-#transaction-type:not(:checked) ~ * .expense-option,
-#transaction-type:not(:checked) ~ * .saving-option {
-    display: none;
+/* Tampilkan hanya yang sesuai dengan jenis transaksi */
+#transaction-type[value="income"] ~ * #category option.income-option,
+#transaction-type[value="expense"] ~ * #category option.expense-option,
+#transaction-type[value="saving"] ~ * #category option.saving-option {
+    display: block;
 }
 
 /* JavaScript akan menangani visibilitas ini */
