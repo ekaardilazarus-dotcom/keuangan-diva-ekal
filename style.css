@@ -2311,7 +2311,7 @@ body {
 }
 /* ============ FIX CATEGORY DROPDOWN ============ */
 #category option {
-    display: none;
+    display: block;
 }
 
 #category option[value=""] {
@@ -2323,6 +2323,9 @@ body {
 #category option.saving-option {
     display: none;
 }
-
+#category:invalid {
+    border-color: #e74c3c;
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2);
+}
 /* CSS untuk menampilkan option berdasarkan jenis transaksi */
 /* Ini akan dikontrol oleh JavaScript */
