@@ -21,7 +21,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Set tanggal default di form
     const today = new Date();
-    document.getElementById('date').valueAsDate = today;
+    const dateInput = document.getElementById('date');
+    if (dateInput) dateInput.valueAsDate = today;
     
     // Load data dari localStorage
     loadLocalData();
@@ -29,15 +30,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // Setup event listeners
     setupEventListeners();
     
+    // Inisialisasi dropdown kategori
+    setupCategoryDropdown();
+    
     // Load data awal
     loadSummary();
-   loadTransactions('month');
+    loadTransactions('month');
     loadSavingsTargets();
     loadReminders();
     
     // Update UI
     updateUI();
-        if (navigator.onLine) {
+    if (navigator.onLine) {
         setTimeout(() => {
             syncFromCloud();
         }, 1000);
@@ -46,6 +50,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Setup semua event listeners
 function setupEventListeners() {
+    console.log('Setting up event listeners...');
     // Tab buttons
     document.querySelectorAll('.tab-button').forEach(button => {
         button.addEventListener('click', function() {
@@ -73,36 +78,47 @@ function setupEventListeners() {
     
     document.querySelectorAll('input[name="period"]').forEach(radio => {
         radio.addEventListener('change', function() {
-            loadSummary();
+            calculateLocalSummary();
         });
     });
     
     // Form transaksi
-    document.getElementById('transaction-form-input').addEventListener('submit', saveTransaction);
+    const transForm = document.getElementById('transaction-form-input');
+    if (transForm) transForm.addEventListener('submit', saveTransaction);
     
     // Form target tabungan
-    document.getElementById('btn-add-target').addEventListener('click', addSavingsTarget);
+    const addTargetBtn = document.getElementById('btn-add-target');
+    if (addTargetBtn) addTargetBtn.addEventListener('click', addSavingsTarget);
     
     // Form reminder
-    document.getElementById('reminder-edit-form').addEventListener('submit', saveReminder);
-    document.getElementById('btn-cancel-reminder').addEventListener('click', cancelEditReminder);
-    document.getElementById('btn-delete-reminder').addEventListener('click', deleteReminder);
+    const reminderForm = document.getElementById('reminder-edit-form');
+    if (reminderForm) {
+        reminderForm.addEventListener('submit', saveReminder);
+        document.getElementById('btn-cancel-reminder').addEventListener('click', cancelEditReminder);
+        document.getElementById('btn-delete-reminder').addEventListener('click', deleteReminder);
+    }
     
     // Sync buttons
-    document.getElementById('btn-sync-from-cloud').addEventListener('click', syncFromCloud);
-    document.getElementById('test-connection').addEventListener('click', testConnection);
+    const syncBtn = document.getElementById('btn-sync-from-cloud');
+    if (syncBtn) syncBtn.addEventListener('click', syncFromCloud);
 
     // Type dropdown untuk kategori
-    document.getElementById('transaction-type').addEventListener('change', function() {
-        updateCategoryOptions(this.value);
-        toggleSavingTarget();
-    });
+    const transType = document.getElementById('transaction-type');
+    if (transType) {
+        transType.addEventListener('change', function() {
+            updateCategoryOptions(this.value);
+            toggleSavingTarget();
+        });
+    }
     
     // Modal
-    document.getElementById('modal-cancel').addEventListener('click', hideModal);
-    document.getElementById('clear-data').addEventListener('click', confirmClearData);
-    document.getElementById('setup-sheets').addEventListener('click', setupGoogleSheets);
+    const modalCancel = document.getElementById('modal-cancel');
+    if (modalCancel) modalCancel.addEventListener('click', hideModal);
+    
+    const clearData = document.getElementById('clear-data');
+    if (clearData) clearData.addEventListener('click', confirmClearData);
 }
+
 function formatCategoryName(category) {
     const names = {
         'gaji': 'Gaji',
@@ -123,11 +139,13 @@ function formatCategoryName(category) {
 
 // ===== SETUP CATEGORY DROPDOWN =====
 function setupCategoryDropdown() {
-    updateCategoryOptions(document.getElementById('transaction-type').value);
+    const transType = document.getElementById('transaction-type');
+    if (transType) updateCategoryOptions(transType.value);
 }
 
 function updateCategoryOptions(selectedType) {
     const categorySelect = document.getElementById('category');
+    if (!categorySelect) return;
     
     // Simpan nilai yang dipilih
     const currentValue = categorySelect.value;
@@ -173,6 +191,7 @@ function updateCategoryOptions(selectedType) {
 
 function addCategoryOption(value, text) {
     const categorySelect = document.getElementById('category');
+    if (!categorySelect) return;
     const option = document.createElement('option');
     option.value = value;
     option.textContent = text;
@@ -181,8 +200,11 @@ function addCategoryOption(value, text) {
 
 // Fungsi untuk switch tab
 function switchTab(tabId) {
+    console.log('Switching to tab:', tabId);
+    
     // Update tab buttons
-    document.querySelectorAll('.tab-button').forEach(button => {
+    const buttons = document.querySelectorAll('.tab-button');
+    buttons.forEach(button => {
         button.classList.remove('active');
         if (button.getAttribute('data-tab') === tabId) {
             button.classList.add('active');
@@ -190,12 +212,22 @@ function switchTab(tabId) {
     });
     
     // Update tab content
-    document.querySelectorAll('.tab-content').forEach(content => {
+    const contents = document.querySelectorAll('.tab-content');
+    contents.forEach(content => {
         content.classList.remove('active');
         if (content.id === tabId) {
             content.classList.add('active');
         }
     });
+
+    // Re-render specific tab content if needed
+    if (tabId === 'transaction-list') {
+        loadTransactions('month');
+    } else if (tabId === 'savings') {
+        loadSavingsTargets();
+    } else if (tabId === 'reminders-edit') {
+        loadReminders();
+    }
 }
 
 // ===== FUNGSI TRANSAKSI =====
@@ -253,7 +285,7 @@ function saveTransaction(e) {
     loadTransactions();
     loadSummary();
     
-  // Sync ke cloud
+    // Sync ke cloud
     if (navigator.onLine) {
         syncTransactionToCloud(transaction);
     } else {
@@ -262,6 +294,7 @@ function saveTransaction(e) {
     
     showMessage('Transaksi berhasil disimpan!', 'success');
 }
+
 function syncTransactionToCloud(transaction) {
     const url = `${SCRIPT_URL}?action=saveTransaction&data=${encodeURIComponent(JSON.stringify(transaction))}`;
     
@@ -385,8 +418,11 @@ function syncTransactionsFromCloud(filter) {
             console.log('Cloud sync failed:', error);
         });
 }
+
 function filterTransactions(filter) {
     loadTransactions(filter);
+}
+
 function filterByType(type) {
     let filtered = appData.transactions;
     
@@ -400,11 +436,12 @@ function filterByType(type) {
     
     renderTransactions(filtered);
 }
-    
+
 function renderTransactions(transactions = appData.transactions) {
     console.log('Rendering transactions:', transactions.length);
     
     const container = document.getElementById('filtered-transactions');
+    if (!container) return;
     
     if (!transactions || transactions.length === 0) {
         container.innerHTML = `
@@ -420,7 +457,7 @@ function renderTransactions(transactions = appData.transactions) {
     // Sort by date (newest first)
     transactions.sort((a, b) => new Date(b.Tanggal) - new Date(a.Tanggal));
     
- let html = '';
+    let html = '';
     transactions.forEach(transaction => {
         const date = new Date(transaction.Tanggal);
         const formattedDate = date.toLocaleDateString('id-ID', {
@@ -455,7 +492,6 @@ function renderTransactions(transactions = appData.transactions) {
     
     container.innerHTML = html;
 }
-
 
 function loadLocalTransactions(filter = 'month') {
     console.log('Loading local transactions');
@@ -501,7 +537,6 @@ function loadLocalTransactions(filter = 'month') {
 
 // ===== FUNGSI TABUNGAN =====
 
-// ===== TABUNGAN =====
 function loadSavingsTargets() {
     // Load dari localStorage dulu
     const localTargets = JSON.parse(localStorage.getItem('fintrack_savings_targets') || '[]');
@@ -545,6 +580,7 @@ function loadLocalSavingsTargets() {
 
 function renderSavingsTargets() {
     const container = document.getElementById('targets-list');
+    if (!container) return;
     const targets = appData.savingsTargets;
     
     if (!targets || targets.length === 0) {
@@ -568,7 +604,7 @@ function renderSavingsTargets() {
         html += `
             <div class="target-item" style="border-left-color: ${target.color || '#4361ee'}">
                 <div class="target-header">
-                    <h4 class="target-name">${target.nama}</h4>
+                    <h4 class="target-name">${target.nama || target.name}</h4>
                     <div class="target-amounts">
                         <span class="target-current">${current}</span>
                         <span class="target-total">/ ${targetAmount}</span>
@@ -634,181 +670,130 @@ function addSavingsTarget() {
     populateSavingTargetDropdown();
     updateSavingsProgress();
     
-    // Sync ke cloud jika online
+    // Sync ke cloud
     if (navigator.onLine) {
-        fetch(SCRIPT_URL, {
-            method: 'POST',
-            body: new URLSearchParams({
-                action: 'saveSavingsTarget',
-                data: JSON.stringify(target)
+        fetch(`${SCRIPT_URL}?action=saveSavingsTarget&data=${encodeURIComponent(JSON.stringify(target))}`)
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    console.log('Savings target synced to cloud');
+                }
             })
-        })
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                console.log('Target tabungan tersinkron ke cloud');
-            }
-        });
+            .catch(error => {
+                console.log('Failed to sync target to cloud:', error);
+            });
     }
     
     showMessage('Target tabungan berhasil ditambahkan!', 'success');
 }
 
-function updateSavingsProgress() {
-    const totalSavings = appData.savingsTargets.reduce((sum, target) => sum + (parseFloat(target.current) || 0), 0);
-    document.getElementById('total-savings-amount').textContent = formatCurrency(totalSavings);
+function populateSavingTargetDropdown() {
+    const dropdown = document.getElementById('saving-target');
+    if (!dropdown) return;
     
-    // Update progress container
+    dropdown.innerHTML = '<option value="">Pilih Target Tabungan</option>';
+    appData.savingsTargets.forEach(target => {
+        const option = document.createElement('option');
+        option.value = target.id || target.nama || target.name;
+        option.textContent = target.nama || target.name;
+        dropdown.appendChild(option);
+    });
+}
+
+function toggleSavingTarget() {
+    const type = document.getElementById('transaction-type').value;
+    const container = document.getElementById('saving-target-container');
+    if (container) {
+        container.style.display = type === 'saving' ? 'block' : 'none';
+    }
+    // Update category when type changes
+    updateCategoryOptions(type);
+}
+
+function updateSavingsProgress() {
     const container = document.getElementById('progress-container');
+    if (!container) return;
+    
     if (appData.savingsTargets.length === 0) {
         container.innerHTML = '<p class="progress-info">Tambahkan target tabungan untuk melihat progress</p>';
         return;
     }
     
-    let html = '';
-    appData.savingsTargets.forEach(target => {
-        const progress = target.progress || 0;
-        html += `
-            <div class="progress-item">
-                <div class="progress-header">
-                    <span class="progress-name">${target.nama}</span>
-                    <span class="progress-percentage">${progress}%</span>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: ${progress}%; background-color: ${target.color || '#4361ee'}"></div>
-                </div>
-                <div class="progress-amounts">
-                    <span>${formatCurrency(target.current || 0)} / ${formatCurrency(target.target || 0)}</span>
-                </div>
+    // Hitung total progress
+    let totalTarget = 0;
+    let totalCurrent = 0;
+    
+    appData.savingsTargets.forEach(t => {
+        totalTarget += t.target || 0;
+        totalCurrent += t.current || 0;
+    });
+    
+    const totalPercent = totalTarget > 0 ? Math.round((totalCurrent / totalTarget) * 100) : 0;
+    
+    container.innerHTML = `
+        <div class="overall-progress">
+            <div class="progress-label">
+                <span>Progress Keseluruhan</span>
+                <span>${totalPercent}%</span>
             </div>
-        `;
-    });
+            <div class="progress-bar-large">
+                <div class="progress-fill" style="width: ${totalPercent}%"></div>
+            </div>
+            <div class="progress-stats">
+                <span>${formatCurrency(totalCurrent)}</span>
+                <span>dari ${formatCurrency(totalTarget)}</span>
+            </div>
+        </div>
+    `;
     
-    container.innerHTML = html;
-}
-
-function populateSavingTargetDropdown() {
-    const dropdown = document.getElementById('saving-target');
-    dropdown.innerHTML = '<option value="">Pilih Target Tabungan</option>';
+    // Update stats cards
+    const totalAmountEl = document.getElementById('total-savings-amount');
+    if (totalAmountEl) totalAmountEl.textContent = formatCurrency(totalCurrent);
     
-    appData.savingsTargets.forEach(target => {
-        const option = document.createElement('option');
-        option.value = target.id || '';
-        option.textContent = `${target.nama} (${formatCurrency(target.target || 0)})`;
-        dropdown.appendChild(option);
-    });
-}
-
-// ===== FUNGSI BANTU =====
-function toggleSavingTarget() {
-    const type = document.getElementById('transaction-type').value;
-    const container = document.getElementById('saving-target-container');
+    const monthlySavingsEl = document.getElementById('monthly-savings');
+    if (monthlySavingsEl) monthlySavingsEl.textContent = formatCurrency(appData.summary.saving);
     
-    if (type === 'saving') {
-        container.style.display = 'block';
-        populateSavingTargetDropdown();
-    } else {
-        container.style.display = 'none';
+    const achievedTargetsEl = document.getElementById('achieved-targets');
+    if (achievedTargetsEl) {
+        const achieved = appData.savingsTargets.filter(t => (t.current || 0) >= (t.target || 0)).length;
+        achievedTargetsEl.textContent = achieved;
     }
 }
-// ===== FUNGSI REMINDER =====
+
+// ===== FUNGSI PENGINGAT =====
 
 function loadReminders() {
-    if (navigator.onLine) {
-        fetch(`${SCRIPT_URL}?action=getReminders`)
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    appData.reminders = result.data;
-                    renderReminders();
-                    renderRemindersEdit();
-                    updateRemindersCount();
-                } else {
-                    loadLocalReminders();
-                }
-            })
-            .catch(() => {
-                loadLocalReminders();
-            });
-    } else {
-        loadLocalReminders();
-    }
-}
-
-function loadLocalReminders() {
     const localReminders = JSON.parse(localStorage.getItem('fintrack_reminders') || '[]');
     appData.reminders = localReminders;
     renderReminders();
     renderRemindersEdit();
-    updateRemindersCount();
+    
+    if (navigator.onLine) {
+        fetch(`${SCRIPT_URL}?action=getReminders`)
+            .then(response => response.json())
+            .then(result => {
+                if (result.success && result.data) {
+                    appData.reminders = result.data;
+                    renderReminders();
+                    renderRemindersEdit();
+                    localStorage.setItem('fintrack_reminders', JSON.stringify(result.data));
+                }
+            })
+            .catch(error => {
+                console.log('Failed to load reminders from cloud:', error);
+            });
+    }
 }
 
 function renderReminders() {
-    const container = document.getElementById('reminders-list');
-    const upcomingContainer = document.getElementById('upcoming-reminders');
-    const reminders = appData.reminders;
-    
-    if (!reminders || reminders.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state-small">
-                <i class="fas fa-bell"></i>
-                <p>Belum ada pengingat</p>
-            </div>
-        `;
-        upcomingContainer.innerHTML = '<p class="no-upcoming">Tidak ada jatuh tempo dekat</p>';
-        return;
-    }
-    
-    // Render semua reminder
-    let html = '';
-    reminders.forEach(reminder => {
-        html += `
-            <div class="reminder-item ${reminder.isDueSoon ? 'due-soon' : ''}">
-                <div class="reminder-icon">
-                    <i class="fas ${getReminderCategoryIcon(reminder.kategori)}"></i>
-                </div>
-                <div class="reminder-details">
-                    <div class="reminder-header">
-                        <span class="reminder-name">${reminder.nama}</span>
-                        <span class="reminder-amount">${formatCurrency(reminder.jumlah)}</span>
-                    </div>
-                    <div class="reminder-footer">
-                        <span class="reminder-date">${reminder.displayDate}</span>
-                        ${reminder.remainingMonths < 999 ? `<span class="reminder-duration">(${reminder.currentMonth}/${reminder.duration})</span>` : ''}
-                    </div>
-                </div>
-            </div>
-        `;
-    });
-    
-    container.innerHTML = html;
-    
-    // Render upcoming reminders
-    const upcomingReminders = reminders.filter(r => r.isDueSoon);
-    if (upcomingReminders.length === 0) {
-        upcomingContainer.innerHTML = '<p class="no-upcoming">Tidak ada jatuh tempo dekat</p>';
-    } else {
-        let upcomingHtml = '';
-        upcomingReminders.forEach(reminder => {
-            upcomingHtml += `
-                <div class="upcoming-item">
-                    <div class="upcoming-header">
-                        <span class="upcoming-name">${reminder.nama}</span>
-                        <span class="upcoming-days">${reminder.daysUntilDue} hari lagi</span>
-                    </div>
-                    <div class="upcoming-amount">${formatCurrency(reminder.jumlah)}</div>
-                </div>
-            `;
-        });
-        upcomingContainer.innerHTML = upcomingHtml;
-    }
+    // This function might be for a dashboard view if added later
 }
 
 function renderRemindersEdit() {
     const container = document.getElementById('reminders-edit-container');
-    const reminders = appData.reminders;
+    if (!container) return;
     
-    if (!reminders || reminders.length === 0) {
+    if (appData.reminders.length === 0) {
         container.innerHTML = `
             <div class="empty-state">
                 <i class="fas fa-bell"></i>
@@ -820,54 +805,25 @@ function renderRemindersEdit() {
     }
     
     let html = '';
-    reminders.forEach(reminder => {
+    appData.reminders.forEach(reminder => {
+        const icon = getReminderCategoryIcon(reminder.category);
         html += `
-            <div class="reminder-edit-item" data-id="${reminder.id}">
-                <div class="reminder-edit-header">
-                    <h4>${reminder.nama}</h4>
-                    <button class="btn-edit-reminder" onclick="editReminder(${reminder.id})">
-                        <i class="fas fa-edit"></i>
-                    </button>
+            <div class="reminder-edit-item" onclick="editReminder(${reminder.id})">
+                <div class="reminder-icon">
+                    <i class="fas ${icon}"></i>
                 </div>
-                <div class="reminder-edit-details">
-                    <div class="detail-row">
-                        <span class="detail-label">Kategori:</span>
-                        <span class="detail-value">${reminder.kategori}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Jumlah:</span>
-                        <span class="detail-value">${formatCurrency(reminder.jumlah)}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Tanggal:</span>
-                        <span class="detail-value">Setiap tanggal ${reminder.tanggal}</span>
-                    </div>
-                    ${reminder.duration ? `<div class="detail-row">
-                        <span class="detail-label">Durasi:</span>
-                        <span class="detail-value">${reminder.duration} bulan (${reminder.remainingMonths} bulan tersisa)</span>
-                    </div>` : ''}
+                <div class="reminder-info">
+                    <div class="reminder-name">${reminder.name}</div>
+                    <div class="reminder-meta">Setiap tgl ${reminder.date} • ${formatCurrency(reminder.amount)}</div>
+                </div>
+                <div class="reminder-action">
+                    <i class="fas fa-chevron-right"></i>
                 </div>
             </div>
         `;
     });
     
     container.innerHTML = html;
-}
-
-function editReminder(id) {
-    const reminder = appData.reminders.find(r => r.id === id);
-    if (!reminder) return;
-    
-    document.getElementById('reminder-edit-id').value = id;
-    document.getElementById('reminder-edit-name').value = reminder.nama;
-    document.getElementById('reminder-edit-category').value = reminder.kategori;
-    document.getElementById('reminder-edit-amount').value = reminder.jumlah;
-    document.getElementById('reminder-edit-date').value = reminder.tanggal;
-    document.getElementById('reminder-edit-duration').value = reminder.duration || '';
-    document.getElementById('reminder-edit-start-month').value = reminder.startMonth || '';
-    document.getElementById('reminder-edit-description').value = reminder.keterangan || '';
-    
-    document.getElementById('btn-delete-reminder').style.display = 'inline-block';
 }
 
 function saveReminder(e) {
@@ -882,72 +838,64 @@ function saveReminder(e) {
     const startMonth = document.getElementById('reminder-edit-start-month').value;
     const description = document.getElementById('reminder-edit-description').value;
     
-    if (!name || !category || !amount || !date) {
-        showMessage('Harap isi semua field yang wajib', 'error');
-        return;
-    }
-    
     const reminder = {
-        id: id || null,
-        name: name,
-        category: category,
+        id: id ? parseInt(id) : Date.now(),
+        name,
+        category,
         amount: parseFloat(amount),
         date: parseInt(date),
-        duration: duration || 0,
-        startMonth: startMonth,
-        description: description
+        duration: parseInt(duration) || 0,
+        startMonth,
+        description
     };
     
-    // Simpan ke localStorage
     let localReminders = JSON.parse(localStorage.getItem('fintrack_reminders') || '[]');
-    
     if (id) {
-        // Update existing
         const index = localReminders.findIndex(r => r.id === parseInt(id));
-        if (index !== -1) {
-            localReminders[index] = {
-                ...localReminders[index],
-                ...reminder
-            };
-        }
+        if (index !== -1) localReminders[index] = reminder;
     } else {
-        // Add new
-        reminder.id = Date.now();
         localReminders.push(reminder);
     }
     
     localStorage.setItem('fintrack_reminders', JSON.stringify(localReminders));
-    
-    // Update data lokal
-    loadLocalReminders();
-    
-    // Reset form
+    loadReminders();
     cancelEditReminder();
     
-    // Sync ke cloud jika online
     if (navigator.onLine) {
-        fetch(SCRIPT_URL, {
-            method: 'POST',
-            body: new URLSearchParams({
-                action: 'saveReminder',
-                data: JSON.stringify(reminder)
+        const action = id ? 'updateReminder' : 'saveReminder';
+        fetch(`${SCRIPT_URL}?action=${action}&data=${encodeURIComponent(JSON.stringify(reminder))}`)
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) console.log('Reminder synced to cloud');
             })
-        })
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                console.log('Reminder tersinkron ke cloud');
-            }
-        });
+            .catch(error => console.log('Failed to sync reminder:', error));
     }
     
-    showMessage('Pengingat berhasil disimpan!', 'success');
+    showMessage(id ? 'Pengingat diperbarui!' : 'Pengingat ditambahkan!', 'success');
+}
+
+function editReminder(id) {
+    const reminder = appData.reminders.find(r => r.id === id);
+    if (!reminder) return;
+    
+    document.getElementById('reminder-edit-id').value = reminder.id;
+    document.getElementById('reminder-edit-name').value = reminder.name;
+    document.getElementById('reminder-edit-category').value = reminder.category;
+    document.getElementById('reminder-edit-amount').value = reminder.amount;
+    document.getElementById('reminder-edit-date').value = reminder.date;
+    document.getElementById('reminder-edit-duration').value = reminder.duration || 0;
+    document.getElementById('reminder-edit-start-month').value = reminder.startMonth || '';
+    document.getElementById('reminder-edit-description').value = reminder.description || '';
+    
+    document.getElementById('btn-delete-reminder').style.display = 'block';
+    document.querySelector('.add-reminder-edit h3').textContent = 'Ubah Pengingat';
 }
 
 function cancelEditReminder() {
     document.getElementById('reminder-edit-form').reset();
     document.getElementById('reminder-edit-id').value = '';
     document.getElementById('btn-delete-reminder').style.display = 'none';
+    document.querySelector('.add-reminder-edit h3').textContent = 'Tambah/Ubah Pengingat';
 }
 
 function deleteReminder() {
@@ -955,44 +903,33 @@ function deleteReminder() {
     if (!id) return;
     
     showModal('Hapus Pengingat', 'Apakah Anda yakin ingin menghapus pengingat ini?', () => {
-        // Hapus dari localStorage
         let localReminders = JSON.parse(localStorage.getItem('fintrack_reminders') || '[]');
         localReminders = localReminders.filter(r => r.id !== parseInt(id));
         localStorage.setItem('fintrack_reminders', JSON.stringify(localReminders));
         
-        // Update data lokal
-        loadLocalReminders();
-        
-        // Reset form
+        loadReminders();
         cancelEditReminder();
         
-        // Sync ke cloud jika online
         if (navigator.onLine) {
             fetch(`${SCRIPT_URL}?action=deleteReminder&id=${id}`)
                 .then(response => response.json())
                 .then(result => {
-                    if (result.success) {
-                        console.log('Reminder dihapus dari cloud');
-                    }
-                });
+                    if (result.success) console.log('Reminder deleted from cloud');
+                })
+                .catch(error => console.log('Failed to delete reminder:', error));
         }
         
         showMessage('Pengingat berhasil dihapus!', 'success');
     });
 }
 
-function updateRemindersCount() {
-    document.getElementById('reminders-count').textContent = appData.reminders.length;
-}
-
 // ===== SUMMARY =====
 function loadSummary() {
-    // Hitung dari data lokal
     calculateLocalSummary();
     
-    // Sync dari cloud jika online
     if (navigator.onLine) {
-        const period = document.querySelector('input[name="period"]:checked').value || 'month';
+        const periodEl = document.querySelector('input[name="period"]:checked');
+        const period = periodEl ? periodEl.value : 'month';
         fetch(`${SCRIPT_URL}?action=getSummary&period=${period}`)
             .then(response => response.json())
             .then(result => {
@@ -1007,43 +944,49 @@ function loadSummary() {
     }
 }
 
-function calculateLocalSummary(period) {
-    // Ambil data dari localStorage
+function calculateLocalSummary() {
+    console.log('Calculating local summary...');
+    const periodEl = document.querySelector('input[name="period"]:checked');
+    const period = periodEl ? periodEl.value : 'month';
+    
+    // Pastikan kita mengambil data terbaru dari localStorage
     const transactions = JSON.parse(localStorage.getItem('fintrack_transactions') || '[]');
     
-    // Filter berdasarkan periode
     const now = new Date();
     let filteredTransactions = transactions;
     
     if (period === 'day') {
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const todayStr = now.toISOString().split('T')[0];
         filteredTransactions = transactions.filter(t => {
-            const transDate = new Date(t.date);
-            return transDate >= today;
+            const transDate = new Date(t.date).toISOString().split('T')[0];
+            return transDate === todayStr;
         });
     } else if (period === 'month') {
-        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
         filteredTransactions = transactions.filter(t => {
             const transDate = new Date(t.date);
-            return transDate >= firstDayOfMonth;
+            return transDate.getMonth() === currentMonth && 
+                   transDate.getFullYear() === currentYear;
         });
     } else if (period === 'year') {
-        const firstDayOfYear = new Date(now.getFullYear(), 0, 1);
-        filteredTransactions = transactions.filter(t => {
-            const transDate = new Date(t.date);
-            return transDate >= firstDayOfYear;
-        });
+        const currentYear = now.getFullYear();
+        filteredTransactions = transactions.filter(t => 
+            new Date(t.date).getFullYear() === currentYear
+        );
     }
     
-    // Hitung total
     let totalIncome = 0;
     let totalExpense = 0;
     let totalSaving = 0;
     
     filteredTransactions.forEach(t => {
-        if (t.type === 'income') totalIncome += t.amount;
-        else if (t.type === 'expense') totalExpense += t.amount;
-        else if (t.type === 'saving') totalSaving += t.amount;
+        const amount = parseFloat(t.amount) || 0;
+        // Normalisasi tipe transaksi karena mapping cloud vs local bisa berbeda
+        const type = (t.type || '').toLowerCase();
+        if (type === 'income' || t.Tipe === 'Pemasukan') totalIncome += amount;
+        else if (type === 'expense' || t.Tipe === 'Pengeluaran') totalExpense += amount;
+        else if (type === 'saving' || t.Tipe === 'Tabungan') totalSaving += amount;
     });
     
     appData.summary = {
@@ -1053,24 +996,31 @@ function calculateLocalSummary(period) {
         balance: totalIncome - totalExpense - totalSaving
     };
     
+    console.log('Summary calculated:', appData.summary);
     updateSummaryUI();
 }
 
 function updateSummaryUI() {
-    // Update header summary
-    document.querySelector('.income-total').textContent = formatCurrency(appData.summary.income);
-    document.querySelector('.expense-total').textContent = formatCurrency(appData.summary.expense);
-    document.querySelector('.savings-total').textContent = formatCurrency(appData.summary.saving);
-    document.querySelector('.balance').textContent = formatCurrency(appData.summary.balance);
+    console.log('Updating summary UI:', appData.summary);
     
-    // Update month summary
-    document.getElementById('month-income').textContent = formatCurrency(appData.summary.income);
-    document.getElementById('month-expense').textContent = formatCurrency(appData.summary.expense);
-    document.getElementById('month-saving').textContent = formatCurrency(appData.summary.saving);
-    document.getElementById('month-balance').textContent = formatCurrency(appData.summary.balance);
+    const incomeTotalEls = document.querySelectorAll('.income-total');
+    incomeTotalEls.forEach(el => el.textContent = formatCurrency(appData.summary.income));
+    
+    const expenseTotalEls = document.querySelectorAll('.expense-total');
+    expenseTotalEls.forEach(el => el.textContent = formatCurrency(appData.summary.expense));
+    
+    const savingsTotalEls = document.querySelectorAll('.savings-total');
+    savingsTotalEls.forEach(el => el.textContent = formatCurrency(appData.summary.saving));
+    
+    const balanceEls = document.querySelectorAll('.balance');
+    balanceEls.forEach(el => el.textContent = formatCurrency(appData.summary.balance));
+    
+    // Update juga di tab Tabungan
+    const totalSavingsAmountEl = document.getElementById('total-savings-amount');
+    if (totalSavingsAmountEl) {
+        totalSavingsAmountEl.textContent = formatCurrency(appData.summary.saving);
+    }
 }
-
-// ===== FUNGSI SYNC =====
 
 // ===== SYNC FUNCTIONS =====
 function syncFromCloud() {
@@ -1079,56 +1029,47 @@ function syncFromCloud() {
         return;
     }
     
-    showMessage('Menyinkronkan data dari cloud...', 'info');
     updateSyncStatus('syncing', 'Menyinkron...');
     
-    // Load semua data sekaligus
     fetch(`${SCRIPT_URL}?action=getAllData`)
         .then(response => response.json())
         .then(result => {
             if (result.success && result.data) {
                 const data = result.data;
                 
-                // Update appData
-                appData.transactions = data.transactions || [];
-                appData.savingsTargets = data.savingsTargets || [];
-                appData.reminders = data.reminders || [];
-                appData.summary = data.summary || appData.summary;
+                if (data.transactions) {
+                    const formattedTransactions = data.transactions.map(t => ({
+                        id: t.id || (Date.now() + Math.random()),
+                        date: t.Tanggal || t.date,
+                        type: t.Tipe === 'Pemasukan' ? 'income' : (t.Tipe === 'Pengeluaran' ? 'expense' : 'saving'),
+                        category: t.Kategori,
+                        amount: t.Jumlah,
+                        description: t.Keterangan || ''
+                    }));
+                    localStorage.setItem('fintrack_transactions', JSON.stringify(formattedTransactions));
+                }
                 
-                // Simpan ke localStorage
-                const formattedTransactions = appData.transactions.map(t => ({
-                    id: Date.now() + Math.random(),
-                    date: t.Tanggal,
-                    type: t.Tipe === 'Pemasukan' ? 'income' : 
-                          t.Tipe === 'Pengeluaran' ? 'expense' : 'saving',
-                    category: t.Kategori,
-                    amount: t.Jumlah,
-                    description: t.Keterangan || ''
-                }));
+                if (data.savingsTargets) localStorage.setItem('fintrack_savings_targets', JSON.stringify(data.savingsTargets));
+                if (data.reminders) localStorage.setItem('fintrack_reminders', JSON.stringify(data.reminders));
                 
-                localStorage.setItem('fintrack_transactions', JSON.stringify(formattedTransactions));
-                localStorage.setItem('fintrack_savings_targets', JSON.stringify(appData.savingsTargets));
-                localStorage.setItem('fintrack_reminders', JSON.stringify(appData.reminders));
-                localStorage.setItem('fintrack_last_sync', new Date().toISOString());
+                const now = new Date();
+                appData.lastSync = now;
+                localStorage.setItem('fintrack_last_sync', now.toISOString());
                 
-                // Update UI
+                // Urutan pemanggilan yang benar
+                loadLocalData();
+                calculateLocalSummary(); 
+                loadTransactions('month');
+                loadSavingsTargets();
+                loadReminders();
+                setupCategoryDropdown(); // Pastikan kategori muncul setelah sync
                 updateUI();
-                renderTransactions();
-                renderSavingsTargets();
-                renderReminders();
-                updateSummaryUI();
-                
-                // Update last sync time
-                appData.lastSync = new Date();
-                document.getElementById('last-sync').textContent = 
-                    appData.lastSync.toLocaleDateString('id-ID') + ' ' + 
-                    appData.lastSync.toLocaleTimeString('id-ID');
                 
                 updateSyncStatus('success', 'Tersinkron');
-                showMessage('Data berhasil disinkronkan dari cloud!', 'success');
+                showMessage('Data berhasil disinkronkan!', 'success');
             } else {
                 updateSyncStatus('error', 'Gagal sync');
-                showMessage('Gagal menyinkronkan data: ' + (result.message || 'Unknown error'), 'error');
+                showMessage('Gagal menyinkronkan data: ' + (result.message || 'Data kosong'), 'error');
             }
         })
         .catch(error => {
@@ -1137,42 +1078,20 @@ function syncFromCloud() {
         });
 }
 
-
-function testConnection() {
-    if (!navigator.onLine) {
-        showMessage('Tidak ada koneksi internet', 'error');
-        return;
-    }
-    
-    showMessage('Menguji koneksi...', 'info');
-    
-    fetch(`${SCRIPT_URL}?action=testConnection`)
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                showMessage('Koneksi berhasil! Server Apps Script aktif.', 'success');
-            } else {
-                showMessage('Server merespon tapi dengan error: ' + result.message, 'error');
-            }
-        })
-        .catch(error => {
-            showMessage('Gagal terhubung ke server: ' + error.message, 'error');
-        });
-}
-
 function updateSyncStatus(status, message) {
     const syncStatus = document.getElementById('sync-status');
-    syncStatus.className = 'sync-status ' + status;
-    syncStatus.querySelector('span').textContent = message;
+    if (syncStatus) {
+        syncStatus.className = 'sync-status ' + status;
+        const span = syncStatus.querySelector('span');
+        if (span) span.textContent = message;
+    }
 }
 
 // ===== FUNGSI UTILITAS =====
 
 function loadLocalData() {
     console.log('Loading local data...');
-    
     try {
-        // Transactions
         const localTransactions = JSON.parse(localStorage.getItem('fintrack_transactions') || '[]');
         appData.transactions = localTransactions.map(t => ({
             Tanggal: t.date || new Date().toISOString(),
@@ -1182,48 +1101,42 @@ function loadLocalData() {
             Keterangan: t.description || ''
         }));
         
-        // Savings targets
         const localTargets = JSON.parse(localStorage.getItem('fintrack_savings_targets') || '[]');
         appData.savingsTargets = localTargets.map(t => ({
             ...t,
             progress: t.target > 0 ? Math.min(Math.round((t.current || 0) / t.target * 100), 100) : 0
         }));
         
-        // Reminders
-        const localReminders = JSON.parse(localStorage.getItem('fintrack_reminders') || '[]');
-        appData.reminders = localReminders;
+        appData.reminders = JSON.parse(localStorage.getItem('fintrack_reminders') || '[]');
         
-        // Last sync
-        if (localStorage.getItem('fintrack_last_sync')) {
-            appData.lastSync = new Date(localStorage.getItem('fintrack_last_sync'));
-            document.getElementById('last-sync').textContent = 
-                appData.lastSync.toLocaleDateString('id-ID') + ' ' + 
-                appData.lastSync.toLocaleTimeString('id-ID');
+        const syncTime = localStorage.getItem('fintrack_last_sync');
+        if (syncTime) {
+            appData.lastSync = new Date(syncTime);
+            const lastSyncEl = document.getElementById('last-sync');
+            if (lastSyncEl) {
+                lastSyncEl.textContent = appData.lastSync.toLocaleDateString('id-ID') + ' ' + appData.lastSync.toLocaleTimeString('id-ID');
+            }
         }
-        
-        console.log('Local data loaded:', {
-            transactions: appData.transactions.length,
-            targets: appData.savingsTargets.length,
-            reminders: appData.reminders.length
-        });
     } catch (error) {
         console.error('Error loading local data:', error);
     }
 }
-
 
 function updateUI() {
     updateSummaryUI();
 }
 
 function resetForm() {
-    document.getElementById('transaction-form-input').reset();
-    document.getElementById('date').valueAsDate = new Date();
-    document.getElementById('saving-target-container').style.display = 'none';
+    const form = document.getElementById('transaction-form-input');
+    if (form) form.reset();
+    const dateInput = document.getElementById('date');
+    if (dateInput) dateInput.valueAsDate = new Date();
+    const targetContainer = document.getElementById('saving-target-container');
+    if (targetContainer) targetContainer.style.display = 'none';
 }
 
 function formatCurrency(amount) {
-    return 'Rp ' + parseFloat(amount).toLocaleString('id-ID');
+    return 'Rp ' + parseFloat(amount || 0).toLocaleString('id-ID');
 }
 
 function formatDate(dateString) {
@@ -1248,7 +1161,6 @@ function getCategoryIcon(category) {
         'pendidikan': 'fa-graduation-cap',
         'tabungan': 'fa-piggy-bank'
     };
-    
     return icons[category] || 'fa-receipt';
 }
 
@@ -1261,46 +1173,41 @@ function getReminderCategoryIcon(category) {
         'langganan': 'fa-newspaper',
         'cicilan': 'fa-calendar-check'
     };
-    
     return icons[category] || 'fa-bell';
 }
 
 function showMessage(message, type = 'info') {
-    // Buat toast notification
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
     toast.innerHTML = `
         <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
         <span>${message}</span>
     `;
-    
     document.body.appendChild(toast);
-    
-    // Tampilkan toast
-    setTimeout(() => {
-        toast.classList.add('show');
-    }, 10);
-    
-    // Hapus toast setelah 3 detik
+    setTimeout(() => toast.classList.add('show'), 10);
     setTimeout(() => {
         toast.classList.remove('show');
-        setTimeout(() => {
-            document.body.removeChild(toast);
-        }, 300);
+        setTimeout(() => document.body.removeChild(toast), 300);
     }, 3000);
 }
 
 function showModal(title, message, confirmCallback) {
-    document.getElementById('modal-message').innerHTML = `<strong>${title}</strong><br>${message}`;
-    document.getElementById('modal-confirm').onclick = function() {
-        if (confirmCallback) confirmCallback();
-        hideModal();
-    };
-    document.getElementById('confirm-modal').classList.add('show');
+    const msgEl = document.getElementById('modal-message');
+    if (msgEl) msgEl.innerHTML = `<strong>${title}</strong><br>${message}`;
+    const confirmBtn = document.getElementById('modal-confirm');
+    if (confirmBtn) {
+        confirmBtn.onclick = function() {
+            if (confirmCallback) confirmCallback();
+            hideModal();
+        };
+    }
+    const modal = document.getElementById('confirm-modal');
+    if (modal) modal.classList.add('show');
 }
 
 function hideModal() {
-    document.getElementById('confirm-modal').classList.remove('show');
+    const modal = document.getElementById('confirm-modal');
+    if (modal) modal.classList.remove('show');
 }
 
 function confirmClearData() {
@@ -1315,33 +1222,9 @@ function clearAllData() {
         reminders: [],
         summary: { income: 0, expense: 0, saving: 0, balance: 0 }
     };
-    
     updateUI();
     loadTransactions();
     loadSavingsTargets();
     loadReminders();
-    
     showMessage('Semua data lokal berhasil dihapus', 'success');
-}
-
-function setupGoogleSheets() {
-    showMessage('Menyiapkan Google Sheets...', 'info');
-    
-    fetch(SCRIPT_URL, {
-        method: 'POST',
-        body: new URLSearchParams({
-            action: 'setupSpreadsheet'
-        })
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            showMessage('Google Sheets berhasil disiapkan!', 'success');
-        } else {
-            showMessage('Gagal menyiapkan Google Sheets: ' + result.message, 'error');
-        }
-    })
-    .catch(error => {
-        showMessage('Gagal terhubung ke server: ' + error.message, 'error');
-    });
 }
