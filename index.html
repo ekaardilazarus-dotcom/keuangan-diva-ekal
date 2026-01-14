@@ -21,7 +21,7 @@
                 </div>
                 <div class="sync-status" id="sync-status">
                     <i class="fas fa-laptop"></i>
-                    <span>Lokal</span>
+                    <span id="last-sync">Belum pernah</span>
                 </div>
             </div>
 
@@ -295,6 +295,12 @@
                                                 <span class="stat-value" id="avg-savings">Rp 0</span>
                                             </div>
                                         </div>
+                                    </div>
+
+                                    <div class="savings-summary-actions" style="margin-top: 30px; display: flex; justify-content: center;">
+                                        <button class="btn-delete-savings" onclick="deleteSavingsData()" style="background-color: #ef233c; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                                            <i class="fas fa-trash-alt"></i> Hapus Semua Data Tabungan
+                                        </button>
                                     </div>
                                 </div>
                             </div>
