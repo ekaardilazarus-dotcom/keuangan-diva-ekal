@@ -27,7 +27,597 @@
     --shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
     --transition: all 0.3s ease;
 }
+/* Tambahkan setelah bagian :root atau di bagian paling atas */
 
+/* ============ TOAST NOTIFICATIONS ============ */
+.toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 20px;
+    border-radius: var(--radius-sm);
+    color: white;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 1000;
+    transform: translateX(150%);
+    transition: transform 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    max-width: 350px;
+}
+
+.toast.show {
+    transform: translateX(0);
+}
+
+.toast-success {
+    background: linear-gradient(90deg, var(--success) 0%, #27ae60 100%);
+    border-left: 4px solid #27ae60;
+}
+
+.toast-error {
+    background: linear-gradient(90deg, var(--danger) 0%, #c0392b 100%);
+    border-left: 4px solid #c0392b;
+}
+
+.toast-info {
+    background: linear-gradient(90deg, var(--info) 0%, #2980b9 100%);
+    border-left: 4px solid #2980b9;
+}
+
+.toast-warning {
+    background: linear-gradient(90deg, var(--warning) 0%, #f39c12 100%);
+    border-left: 4px solid #f39c12;
+}
+
+.toast i {
+    font-size: 18px;
+}
+
+/* ============ FIX TRANSACTION ITEM LAYOUT ============ */
+.transaction-item {
+    display: flex;
+    align-items: center;
+    padding: 18px;
+    background-color: var(--dark);
+    margin-bottom: 12px;
+    border-radius: var(--radius-sm);
+    border-left: 4px solid var(--primary);
+    transition: var(--transition);
+    gap: 15px;
+}
+
+.transaction-icon {
+    background-color: var(--dark-lighter);
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: var(--text-light);
+    flex-shrink: 0;
+}
+
+.transaction-details {
+    flex: 1;
+    min-width: 0; /* Untuk mencegah overflow */
+}
+
+.transaction-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.transaction-category {
+    font-weight: 600;
+    color: var(--text);
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.transaction-amount {
+    font-weight: 700;
+    font-size: 18px;
+    white-space: nowrap;
+}
+
+.transaction-item.income .transaction-amount {
+    color: var(--success);
+}
+
+.transaction-item.expense .transaction-amount {
+    color: #e74c3c;
+}
+
+.transaction-item.saving .transaction-amount {
+    color: var(--info);
+}
+
+.transaction-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.transaction-date {
+    font-size: 13px;
+    color: var(--text-light);
+    background-color: var(--gray);
+    padding: 3px 8px;
+    border-radius: 12px;
+}
+
+.transaction-desc {
+    font-size: 14px;
+    color: var(--text-light);
+    font-style: italic;
+    max-width: 300px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ============ FIX TARGET ITEM LAYOUT ============ */
+.target-item {
+    background-color: var(--dark-lighter);
+    padding: 20px;
+    margin-bottom: 15px;
+    border-radius: var(--radius-sm);
+    border-left: 4px solid var(--secondary);
+    position: relative;
+    transition: var(--transition);
+}
+
+.target-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.target-name {
+    font-weight: 600;
+    color: var(--text);
+    font-size: 16px;
+    flex: 1;
+    min-width: 0;
+}
+
+.target-amounts {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+}
+
+.target-current {
+    font-weight: 700;
+    color: var(--text);
+    font-size: 18px;
+}
+
+.target-total {
+    color: var(--text-light);
+    font-size: 14px;
+}
+
+.target-progress {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.progress-bar {
+    flex: 1;
+    height: 10px;
+    background-color: var(--gray);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 0.6s ease;
+}
+
+.progress-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    min-width: 40px;
+}
+
+.target-footer {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid var(--gray);
+}
+
+.target-deadline {
+    font-size: 13px;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* ============ FIX PROGRESS CONTAINER ============ */
+.progress-container {
+    background-color: var(--dark-lighter);
+    padding: 25px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 25px;
+    border: 1px solid var(--gray);
+}
+
+.progress-item {
+    margin-bottom: 20px;
+}
+
+.progress-item:last-child {
+    margin-bottom: 0;
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.progress-name {
+    font-weight: 600;
+    color: var(--text);
+    font-size: 14px;
+    flex: 1;
+}
+
+.progress-percentage {
+    font-weight: 700;
+    color: var(--warning);
+    font-size: 16px;
+    white-space: nowrap;
+}
+
+.progress-amounts {
+    font-size: 13px;
+    color: var(--text-light);
+    text-align: right;
+    margin-top: 5px;
+}
+
+/* ============ FIX REMINDER EDIT ITEM ============ */
+.reminder-edit-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.reminder-edit-header h4 {
+    font-weight: 600;
+    color: var(--text);
+    font-size: 16px;
+    flex: 1;
+    margin: 0;
+    border: none;
+    padding: 0;
+}
+
+.btn-edit-reminder {
+    background: none;
+    border: none;
+    color: var(--text-light);
+    cursor: pointer;
+    font-size: 16px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: var(--transition);
+}
+
+.btn-edit-reminder:hover {
+    color: var(--primary);
+    background-color: rgba(229, 9, 20, 0.1);
+}
+
+.reminder-edit-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.detail-label {
+    font-size: 13px;
+    color: var(--text-light);
+}
+
+.detail-value {
+    font-size: 13px;
+    color: var(--text);
+    font-weight: 500;
+}
+
+/* ============ FIX REMINDER ITEM LAYOUT ============ */
+.reminder-item {
+    background-color: var(--dark-lighter);
+    padding: 18px;
+    margin-bottom: 12px;
+    border-radius: var(--radius-sm);
+    border-left: 4px solid var(--warning);
+    position: relative;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.reminder-item.due-soon {
+    border-left-color: var(--primary);
+    background-color: rgba(229, 9, 20, 0.05);
+}
+
+.reminder-icon {
+    background-color: var(--dark);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: var(--warning);
+    flex-shrink: 0;
+}
+
+.reminder-item.due-soon .reminder-icon {
+    color: var(--primary);
+}
+
+.reminder-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.reminder-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.reminder-name {
+    font-weight: 600;
+    color: var(--text);
+    font-size: 14px;
+    flex: 1;
+}
+
+.reminder-amount {
+    font-weight: 700;
+    color: var(--warning);
+    font-size: 16px;
+}
+
+.reminder-item.due-soon .reminder-amount {
+    color: var(--primary);
+}
+
+.reminder-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.reminder-date {
+    font-size: 12px;
+    color: var(--text-light);
+    background-color: var(--gray);
+    padding: 3px 8px;
+    border-radius: 12px;
+}
+
+.reminder-duration {
+    font-size: 12px;
+    color: var(--info);
+    font-weight: 600;
+}
+
+/* ============ FIX UPCOMING ITEM LAYOUT ============ */
+.upcoming-item {
+    background-color: var(--dark);
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--primary);
+    transition: var(--transition);
+}
+
+.upcoming-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.upcoming-name {
+    font-weight: 600;
+    color: var(--text);
+    font-size: 14px;
+    flex: 1;
+}
+
+.upcoming-days {
+    font-size: 12px;
+    color: var(--primary);
+    font-weight: 700;
+    background-color: rgba(229, 9, 20, 0.1);
+    padding: 3px 8px;
+    border-radius: 12px;
+}
+
+.upcoming-amount {
+    font-weight: 600;
+    color: var(--warning);
+    font-size: 15px;
+    text-align: right;
+}
+
+/* ============ FIX MODAL ============ */
+#confirm-modal {
+    display: none;
+}
+
+#confirm-modal.show {
+    display: flex;
+}
+
+.btn-confirm {
+    padding: 12px 24px;
+    background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    flex: 1;
+    transition: var(--transition);
+}
+
+.btn-confirm:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(229, 9, 20, 0.3);
+}
+
+.modal-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+/* ============ FIX SYNC STATUS COLORS ============ */
+.sync-status.success {
+    color: var(--success);
+    border-color: rgba(46, 204, 113, 0.3);
+}
+
+.sync-status.success i {
+    color: var(--success);
+}
+
+.sync-status.warning {
+    color: var(--warning);
+    border-color: rgba(241, 196, 15, 0.3);
+}
+
+.sync-status.warning i {
+    color: var(--warning);
+}
+
+.sync-status.error {
+    color: var(--danger);
+    border-color: rgba(231, 76, 60, 0.3);
+}
+
+.sync-status.error i {
+    color: var(--danger);
+}
+
+/* ============ FIX CATEGORY OPTIONS VISIBILITY ============ */
+.income-option,
+.expense-option,
+.saving-option {
+    display: none;
+}
+
+/* Tampilkan berdasarkan jenis transaksi yang dipilih */
+#transaction-type:not(:checked) ~ * .income-option,
+#transaction-type:not(:checked) ~ * .expense-option,
+#transaction-type:not(:checked) ~ * .saving-option {
+    display: none;
+}
+
+/* JavaScript akan menangani visibilitas ini */
+/* Atau bisa dengan CSS lebih lanjut jika diperlukan */
+
+/* ============ FIX RESPONSIVE LAYOUT ============ */
+@media (max-width: 480px) {
+    .transaction-item,
+    .reminder-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .transaction-icon,
+    .reminder-icon {
+        align-self: center;
+    }
+    
+    .target-header,
+    .reminder-header,
+    .upcoming-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .target-name,
+    .reminder-name,
+    .upcoming-name {
+        margin-bottom: 5px;
+    }
+    
+    .form-row {
+        flex-direction: column;
+    }
+    
+    .modal-actions {
+        flex-direction: column;
+    }
+    
+    .btn-confirm,
+    .btn-cancel {
+        width: 100%;
+    }
+}
 body {
     font-family: 'Montserrat', sans-serif;
     background-color: #141414;
