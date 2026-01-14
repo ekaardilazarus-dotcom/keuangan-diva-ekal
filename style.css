@@ -636,59 +636,60 @@ body {
 
 /* ============ HEADER ============ */
 .header {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: center;
     background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
     padding: 20px;
     border-radius: var(--radius);
     margin-bottom: 25px;
     box-shadow: var(--shadow);
-    position: relative;
-    gap: 15px;
-}
-
-@media (min-width: 992px) {
-    .header {
-        flex-direction: row;
-        gap: 30px;
-    }
-}
-
-.logo {
     display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.header-top {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 15px;
-    flex-shrink: 0;
+    width: 100%;
 }
 
-.logo i {
-    font-size: 32px;
-    color: white;
-    background: rgba(255, 255, 255, 0.2);
-    padding: 12px;
-    border-radius: 50%;
-    transition: var(--transition);
+.period-selector {
+    display: flex;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.2);
+    padding: 8px;
+    border-radius: var(--radius-sm);
+    width: fit-content;
+    margin: 0 auto;
 }
 
-.logo i:hover {
-    transform: rotate(15deg) scale(1.1);
+.period-options {
+    display: flex;
+    gap: 10px;
 }
 
-.logo h1 {
-    font-size: 28px;
-    font-weight: 700;
-    color: white;
-    letter-spacing: 0.5px;
+.period-btn {
+    cursor: pointer;
 }
 
-.logo-sub {
-    font-size: 18px;
-    font-weight: 400;
-    opacity: 0.9;
-    margin-left: 5px;
-    color: #ffd166;
+.period-btn input {
+    display: none;
+}
+
+.period-btn span {
+    padding: 6px 20px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s;
+    color: rgba(255, 255, 255, 0.8);
+    display: inline-block;
+}
+
+.period-btn input:checked + span {
+    background-color: white;
+    color: var(--primary);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 .comparison {
@@ -701,8 +702,7 @@ body {
     border-radius: var(--radius-sm);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    flex: 1;
-    max-width: 800px;
+    width: 100%;
 }
 
 @media (max-width: 767px) {
@@ -1091,8 +1091,9 @@ body {
 .tab-content {
     display: none;
     padding: 30px;
-    height: calc(100% - 60px);
-    overflow-y: auto;
+    height: auto;
+    min-height: 400px;
+    overflow-y: visible;
 }
 
 .tab-content.active {
