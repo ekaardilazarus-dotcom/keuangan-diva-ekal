@@ -38,14 +38,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Setup event listeners
     setupEventListeners();
     
-    // Mulai dari 0 tanpa koneksi database otomatis
-    console.log('Menunggu koneksi database manual...');
-    loadLocalData();
-    calculateLocalSummary();
-    loadTransactions('month');
-    loadSavingsTargets();
-    loadReminders();
-    updateUI();
+    // Mulai dengan sinkronisasi cloud
+    console.log('Menyambungkan ke database cloud...');
+    syncFromCloud();
 });
 
 // Setup semua event listeners
@@ -290,9 +285,12 @@ function saveTransaction(e) {
     };
     
     if (navigator.onLine) {
-        syncTransactionToCloud(transaction);
-        // Kita tidak lagi menyimpan secara lokal terlebih dahulu
-        // UI akan diperbarui setelah sinkronisasi cloud atau tetap memuat dari cloud
+        // Jika tipenya saving, gunakan sheet khusus datatabungan
+        if (type === 'saving') {
+            syncSavingToCloud(transaction);
+        } else {
+            syncTransactionToCloud(transaction);
+        }
         showMessage('Mengirim ke database...', 'info');
         resetForm();
     } else {
@@ -300,69 +298,98 @@ function saveTransaction(e) {
     }
 }
 
-function syncTransactionToCloud(transaction) {
-    const url = `${SCRIPT_URL}?action=saveTransaction&data=${encodeURIComponent(JSON.stringify(transaction))}`;
+function syncSavingToCloud(transaction) {
+    console.log('Preparing to sync saving to datatabungan:', transaction);
     
-    fetch(url)
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                console.log('Transaction synced to cloud');
-                updateSyncStatus('success', 'Tersinkron');
-                showMessage('Transaksi berhasil disimpan ke database!', 'success');
-                // Refresh data setelah simpan berhasil
-                syncFromCloud();
-            }
-        })
-        .catch(error => {
-            console.log('Transaction sync failed:', error);
-            updateSyncStatus('warning', 'Simpan gagal');
-            showMessage('Gagal menyimpan ke database cloud', 'error');
-        });
+    const formData = new FormData();
+    formData.append('action', 'saveSaving');
+    formData.append('data', JSON.stringify(transaction));
+
+    fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: formData,
+        mode: 'no-cors'
+    })
+    .then(() => {
+        console.log('Saving request sent to datatabungan');
+        updateSyncStatus('success', 'Tersinkron');
+        showMessage('Tabungan berhasil disimpan!', 'success');
+        setTimeout(syncFromCloud, 2000);
+    })
+    .catch(error => {
+        console.error('Saving sync failed:', error);
+        updateSyncStatus('warning', 'Simpan gagal');
+        showMessage('Gagal mengirim data tabungan', 'error');
+    });
+}
+
+function deleteSavingsData() {
+    if (!confirm('Apakah Anda yakin ingin menghapus SEMUA data tabungan dan target tabungan? Tindakan ini tidak dapat dibatalkan.')) {
+        return;
+    }
+
+    if (!navigator.onLine) {
+        showMessage('Harus online untuk menghapus data cloud', 'error');
+        return;
+    }
+
+    updateSyncStatus('syncing', 'Menghapus...');
+    
+    const formData = new FormData();
+    formData.append('action', 'deleteSavings');
+
+    fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: formData,
+        mode: 'no-cors'
+    })
+    .then(() => {
+        showMessage('Data tabungan berhasil dihapus!', 'success');
+        setTimeout(syncFromCloud, 2000);
+    })
+    .catch(error => {
+        console.error('Delete savings failed:', error);
+        showMessage('Gagal menghapus data tabungan', 'error');
+    });
+}
+
+
+function syncTransactionToCloud(transaction) {
+    console.log('Preparing to sync transaction:', transaction);
+    
+    const formData = new FormData();
+    formData.append('action', 'saveTransaction');
+    formData.append('data', JSON.stringify(transaction));
+
+    fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: formData,
+        mode: 'no-cors'
+    })
+    .then(() => {
+        console.log('Transaction request sent (no-cors mode)');
+        updateSyncStatus('success', 'Tersinkron');
+        showMessage('Transaksi berhasil dikirim ke cloud!', 'success');
+        setTimeout(syncFromCloud, 2000);
+    })
+    .catch(error => {
+        console.error('Transaction sync failed:', error);
+        updateSyncStatus('warning', 'Simpan gagal');
+        showMessage('Gagal mengirim ke database cloud', 'error');
+    });
 }
 
 function loadTransactions(filter = 'month') {
     console.log('Loading transactions, filter:', filter);
     
-    const localTransactions = JSON.parse(localStorage.getItem('fintrack_transactions') || '[]');
-    let filteredTransactions = localTransactions;
-    const today = new Date();
-    
-    if (filter === 'day') {
-        const todayStr = today.toISOString().split('T')[0];
-        filteredTransactions = localTransactions.filter(t => 
-            new Date(t.date).toISOString().split('T')[0] === todayStr
-        );
-    } else if (filter === 'month') {
-        const currentMonth = today.getMonth();
-        const currentYear = today.getFullYear();
-        filteredTransactions = localTransactions.filter(t => {
-            const transDate = new Date(t.date);
-            return transDate.getMonth() === currentMonth && 
-                   transDate.getFullYear() === currentYear;
-        });
-    } else if (filter === 'year') {
-        const currentYear = today.getFullYear();
-        filteredTransactions = localTransactions.filter(t => 
-            new Date(t.date).getFullYear() === currentYear
-        );
+    if (navigator.onLine && (!appData.transactions || appData.transactions.length === 0)) {
+        syncFromCloud();
+        return;
     }
     
-    appData.transactions = filteredTransactions.map(t => ({
-        Tanggal: t.date,
-        Tipe: t.type === 'income' ? 'Pemasukan' : t.type === 'expense' ? 'Pengeluaran' : 'Tabungan',
-        Kategori: t.category,
-        Jumlah: parseFloat(t.amount) || 0,
-        Keterangan: t.description || ''
-    }));
-    
-    console.log('Transactions loaded:', appData.transactions.length);
     renderTransactions();
-    
-    if (navigator.onLine) {
-        syncTransactionsFromCloud(filter);
-    }
 }
+
 
 function syncTransactionsFromCloud(filter) {
     // Fungsi ini dikosongkan karena data ditarik secara global lewat syncFromCloud
@@ -1020,13 +1047,12 @@ async function loadSummary() {
 function updateSummaryUI() {
     console.log('Updating summary UI:', appData.summary);
     
-    // Pastikan nilai default adalah 0 jika data tidak valid
     const income = parseFloat(appData.summary.income) || 0;
     const expense = parseFloat(appData.summary.expense) || 0;
     const saving = parseFloat(appData.summary.saving) || 0;
     const balance = parseFloat(appData.summary.balance) || 0;
+    const totalSavings = parseFloat(appData.summary.totalSavings) || 0;
 
-    // Update UI
     const incomeTotalEls = document.querySelectorAll('.income-total');
     incomeTotalEls.forEach(el => el.textContent = formatCurrency(income));
     
@@ -1041,11 +1067,12 @@ function updateSummaryUI() {
     
     const totalSavingsAmountEl = document.getElementById('total-savings-amount');
     if (totalSavingsAmountEl) {
-        totalSavingsAmountEl.textContent = formatCurrency(saving);
+        totalSavingsAmountEl.textContent = formatCurrency(totalSavings);
     }
     
     console.log('Summary UI updated.');
 }
+
 
 
 // ===== SYNC FUNCTIONS =====
@@ -1056,77 +1083,153 @@ function syncFromCloud() {
         return;
     }
     
+    console.log('Syncing all data from cloud...');
     updateSyncStatus('syncing', 'Menyinkron...');
     
     fetch(`${SCRIPT_URL}?action=getAllData`)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
         .then(result => {
-            // Bersihkan data lama terlebih dahulu agar tidak ada sisa angka
-            localStorage.setItem('fintrack_transactions', JSON.stringify([]));
-            localStorage.setItem('fintrack_savings_targets', JSON.stringify([]));
-            localStorage.setItem('fintrack_reminders', JSON.stringify([]));
+            console.log('Cloud data received:', result);
             
-            appData.summary = {
-                income: 0,
-                expense: 0,
-                saving: 0,
-                balance: 0
-            };
-
             if (result.success && result.data) {
                 const data = result.data;
                 
-                if (data.transactions && data.transactions.length > 0) {
-                    const formattedTransactions = data.transactions.map(t => ({
-                        id: t.id || (Date.now() + Math.random()),
-                        date: t.Tanggal || t.date,
-                        type: t.Tipe === 'Pemasukan' ? 'income' : (t.Tipe === 'Pengeluaran' ? 'expense' : 'saving'),
-                        category: t.Kategori,
-                        amount: parseFloat(t.Jumlah) || 0,
-                        description: t.Keterangan || ''
-                    }));
-                    localStorage.setItem('fintrack_transactions', JSON.stringify(formattedTransactions));
+                if (data.transactions) {
+                    appData.transactions = data.transactions;
+                }
+
+                if (data.savingsTransactions) {
+                    appData.savingsTransactions = data.savingsTransactions;
                 }
                 
                 if (data.savingsTargets) {
-                    localStorage.setItem('fintrack_savings_targets', JSON.stringify(data.savingsTargets));
+                    appData.savingsTargets = data.savingsTargets;
                 }
 
                 if (data.reminders) {
-                    localStorage.setItem('fintrack_reminders', JSON.stringify(data.reminders));
+                    appData.reminders = data.reminders;
                 }
                 
-                const now = new Date();
-                appData.lastSync = now;
-                localStorage.setItem('fintrack_last_sync', now.toISOString());
+                appData.lastSync = new Date();
+                updateSyncTimeUI();
                 
-                loadLocalData();
-                calculateLocalSummary();
-                loadTransactions('month');
-                loadSavingsTargets();
-                loadReminders();
-                setupCategoryDropdown();
-                updateUI();
-                
+                refreshAppData();
                 updateSyncStatus('success', 'Tersinkron');
-                showMessage('Data berhasil disinkronkan!', 'success');
             } else {
-                updateSyncStatus('success', 'Database Kosong');
-                loadLocalData();
-                calculateLocalSummary();
-                updateUI();
-                showMessage('Database cloud kosong', 'info');
+                updateSyncStatus('success', 'Cloud Kosong');
             }
         })
         .catch(error => {
-            updateSyncStatus('error', 'Gagal koneksi');
-            showMessage('Gagal terhubung ke server: ' + error.message, 'error');
-            // Jika gagal koneksi, tetap jalankan UI dengan data lokal yang ada
-            loadLocalData();
-            calculateLocalSummary();
-            updateUI();
+            console.error('Cloud sync failed:', error);
+            updateSyncStatus('error', 'Gagal sinkron');
+            showMessage('Gagal sinkron: ' + error.message, 'error');
         });
 }
+
+
+
+/**
+ * Fungsi pembantu untuk memuat ulang semua data dari LocalStorage ke variabel appData dan UI
+ */
+function refreshAppData() {
+    // Fungsi ini dipanggil setelah data cloud berhasil ditarik
+    
+    calculateLocalSummary();
+    
+    const activeFilter = document.querySelector('.filter-btn.active');
+    const filter = activeFilter ? activeFilter.getAttribute('data-filter') : 'month';
+    renderTransactions(); 
+    
+    renderSavingsTargets();
+    populateSavingTargetDropdown();
+    updateSavingsProgress();
+    
+    loadReminders();
+    updateUI();
+}
+
+function calculateLocalSummary() {
+    console.log('Calculating summary from cloud data...');
+    
+    const transactions = appData.transactions || [];
+    const savings = appData.savingsTransactions || []; // Ambil dari data tabungan terpisah
+    const periodEl = document.querySelector('input[name="period"]:checked');
+    const filter = periodEl ? periodEl.value : 'month';
+    const today = new Date();
+    
+    let periodIncome = 0;
+    let periodExpense = 0;
+    let periodSaving = 0;
+    
+    // Hitung income & expense dari sheet utama
+    transactions.forEach(t => {
+        const transDate = new Date(t.Tanggal);
+        const amount = parseFloat(t.Jumlah) || 0;
+        const type = t.Tipe;
+        
+        let inPeriod = false;
+        if (filter === 'day') {
+            inPeriod = transDate.toDateString() === today.toDateString();
+        } else if (filter === 'month') {
+            inPeriod = transDate.getMonth() === today.getMonth() && transDate.getFullYear() === today.getFullYear();
+        } else if (filter === 'year') {
+            inPeriod = transDate.getFullYear() === today.getFullYear();
+        }
+        
+        if (inPeriod) {
+            if (type === 'Pemasukan') periodIncome += amount;
+            else if (type === 'Pengeluaran') periodExpense += amount;
+        }
+    });
+
+    // Hitung saving dari sheet datatabungan
+    savings.forEach(s => {
+        const transDate = new Date(s.Tanggal);
+        const amount = parseFloat(s.Jumlah) || 0;
+        
+        let inPeriod = false;
+        if (filter === 'day') {
+            inPeriod = transDate.toDateString() === today.toDateString();
+        } else if (filter === 'month') {
+            inPeriod = transDate.getMonth() === today.getMonth() && transDate.getFullYear() === today.getFullYear();
+        } else if (filter === 'year') {
+            inPeriod = transDate.getFullYear() === today.getFullYear();
+        }
+        
+        if (inPeriod) {
+            periodSaving += amount;
+        }
+    });
+    
+    // Hitung saldo utama (hanya Pemasukan - Pengeluaran)
+    let totalBalance = 0;
+    transactions.forEach(t => {
+        const amount = parseFloat(t.Jumlah) || 0;
+        if (t.Tipe === 'Pemasukan') totalBalance += amount;
+        else if (t.Tipe === 'Pengeluaran') totalBalance -= amount;
+    });
+
+    // Hitung total tabungan terpisah
+    let totalSavingsBalance = 0;
+    savings.forEach(s => {
+        totalSavingsBalance += parseFloat(s.Jumlah) || 0;
+    });
+    
+    appData.summary = {
+        income: periodIncome,
+        expense: periodExpense,
+        saving: periodSaving,
+        balance: totalBalance,
+        totalSavings: totalSavingsBalance
+    };
+    
+    updateSummaryUI();
+}
+
+
 
 function updateSyncStatus(status, message) {
     const syncStatus = document.getElementById('sync-status');
@@ -1169,6 +1272,21 @@ function loadLocalData() {
 
 function updateUI() {
     updateSummaryUI();
+    updateSyncTimeUI();
+}
+
+function updateSyncTimeUI() {
+    const lastSyncEl = document.getElementById('last-sync');
+    if (lastSyncEl) {
+        if (appData.lastSync) {
+            const now = appData.lastSync;
+            const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+            const dateString = now.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
+            lastSyncEl.textContent = `${dateString}, ${timeString}`;
+        } else {
+            lastSyncEl.textContent = 'Belum pernah';
+        }
+    }
 }
 
 function resetForm() {
