@@ -561,23 +561,6 @@
     color: var(--danger);
 }
 
-/* ============ FIX CATEGORY OPTIONS VISIBILITY ============ */
-#category option.income-option,
-#category option.expense-option,
-#category option.saving-option {
-    display: none;
-}
-
-/* Tampilkan hanya yang sesuai dengan jenis transaksi */
-#transaction-type[value="income"] ~ * #category option.income-option,
-#transaction-type[value="expense"] ~ * #category option.expense-option,
-#transaction-type[value="saving"] ~ * #category option.saving-option {
-    display: block;
-}
-
-/* JavaScript akan menangani visibilitas ini */
-/* Atau bisa dengan CSS lebih lanjut jika diperlukan */
-
 /* ============ FIX RESPONSIVE LAYOUT ============ */
 @media (max-width: 480px) {
     .transaction-item,
@@ -2318,11 +2301,6 @@ body {
     display: block !important;
 }
 
-#category option.income-option,
-#category option.expense-option,
-#category option.saving-option {
-    display: none;
-}
 #category:invalid {
     border-color: #e74c3c;
     box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2);
