@@ -14,10 +14,17 @@
     <div class="container">
         <!-- Header dengan perbandingan pemasukan/pengeluaran/tabungan -->
         <header class="header">
-            <div class="logo">
-                <i class="fas fa-piggy-bank"></i>
-                <h1>FinTrack<span class="logo-sub">Pro</span></h1>
+            <div class="header-top">
+                <div class="logo">
+                    <i class="fas fa-piggy-bank"></i>
+                    <h1>FinTrack<span class="logo-sub">Pro</span></h1>
+                </div>
+                <div class="sync-status" id="sync-status">
+                    <i class="fas fa-laptop"></i>
+                    <span>Lokal</span>
+                </div>
             </div>
+
             <div class="comparison">
                 <div class="comparison-item">
                     <span class="comparison-label">Pemasukan</span>
@@ -36,15 +43,40 @@
                     <span class="comparison-value balance">Rp 0</span>
                 </div>
             </div>
-            <div class="sync-status" id="sync-status">
-                <i class="fas fa-laptop"></i>
-                <span>Lokal</span>
+
+            <div class="period-selector">
+                <div class="period-options">
+                    <label class="period-btn">
+                        <input type="radio" name="period" value="day" checked>
+                        <span>Hari Ini</span>
+                    </label>
+                    <label class="period-btn">
+                        <input type="radio" name="period" value="month">
+                        <span>Bulan Ini</span>
+                    </label>
+                    <label class="period-btn">
+                        <input type="radio" name="period" value="year">
+                        <span>Tahun Ini</span>
+                    </label>
+                </div>
             </div>
         </header>
 
         <div class="main-content">
             <!-- Sidebar Kiri: Filter dan Jenis -->
             <aside class="sidebar left-sidebar">
+                <div class="sidebar-section">
+                    <h3><i class="fas fa-cloud"></i> Sinkronisasi</h3>
+                    <div class="sync-controls">
+                        <button class="btn-sync" id="btn-sync-from-cloud">
+                            <i class="fas fa-download"></i> Panggil Database
+                        </button>
+                    </div>
+                    <div class="sync-info">
+                        <p>Terakhir sinkron: <span id="last-sync">Belum pernah</span></p>
+                    </div>
+                </div>
+
                 <div class="sidebar-section">
                     <h3><i class="fas fa-filter"></i> Filter Data</h3>
                     <div class="filter-options">
@@ -62,74 +94,22 @@
                         </div>
                     </div>
                 </div>
-                
-                <div class="sidebar-section">
-                    <h3><i class="fas fa-calendar-alt"></i> Periode Waktu</h3>
-                    <div class="filter-options">
-                        <div class="filter-option">
-                            <label><input type="radio" name="period" value="day" checked> Hari Ini</label>
-                        </div>
-                        <div class="filter-option">
-                            <label><input type="radio" name="period" value="month"> Bulan Ini</label>
-                        </div>
-                        <div class="filter-option">
-                            <label><input type="radio" name="period" value="year"> Tahun Ini</label>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="sidebar-section">
-                    <h3><i class="fas fa-chart-pie"></i> Ringkasan Bulan Ini</h3>
-                    <div class="month-summary">
-                        <div class="summary-item">
-                            <span class="summary-label">Pemasukan:</span>
-                            <span class="summary-value" id="month-income">Rp 0</span>
-                        </div>
-                        <div class="summary-item">
-                            <span class="summary-label">Pengeluaran:</span>
-                            <span class="summary-value" id="month-expense">Rp 0</span>
-                        </div>
-                        <div class="summary-item">
-                            <span class="summary-label">Tabungan:</span>
-                            <span class="summary-value" id="month-saving">Rp 0</span>
-                        </div>
-                        <div class="summary-item">
-                            <span class="summary-label">Saldo:</span>
-                            <span class="summary-value" id="month-balance">Rp 0</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="sidebar-section">
-                    <h3><i class="fas fa-cloud"></i> Sinkronisasi</h3>
-                    <div class="sync-controls">
-                        <button class="btn-sync" id="btn-sync-from-cloud">
-                            <i class="fas fa-download"></i> Panggil Database
-                        </button>
-                    </div>
-                    <div class="sync-info">
-                        <p>Terakhir sinkron: <span id="last-sync">Belum pernah</span></p>
-                        <button class="btn-test" id="test-connection">
-                            <i class="fas fa-wifi"></i> Test Koneksi
-                        </button>
-                    </div>
-                </div>
             </aside>
 
             <!-- Konten Utama dengan 4 Tabs -->
             <main class="content">
                 <div class="main-tabs">
                     <div class="tab-buttons">
-                        <button class="tab-button active" data-tab="transaction-form">
+                        <button class="tab-button active" data-tab="transaction-form" onclick="switchTab('transaction-form')">
                             <i class="fas fa-plus-circle"></i> Transaksi
                         </button>
-                        <button class="tab-button" data-tab="transaction-list">
+                        <button class="tab-button" data-tab="transaction-list" onclick="switchTab('transaction-list')">
                             <i class="fas fa-list-alt"></i> Rekap
                         </button>
-                        <button class="tab-button" data-tab="savings">
+                        <button class="tab-button" data-tab="savings" onclick="switchTab('savings')">
                             <i class="fas fa-piggy-bank"></i> Tabungan
                         </button>
-                        <button class="tab-button" data-tab="reminders-edit">
+                        <button class="tab-button" data-tab="reminders-edit" onclick="switchTab('reminders-edit')">
                             <i class="fas fa-edit"></i> Edit Pengingat
                         </button>
                     </div>
@@ -142,7 +122,7 @@
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label for="transaction-type">Jenis Transaksi *</label>
-                                        <select id="transaction-type" required onchange="toggleSavingTarget()">
+                                        <select id="transaction-type" name="transaction-type" required onchange="toggleSavingTarget(); updateCategoryOptions(this.value)">
                                             <option value="">Pilih Jenis</option>
                                             <option value="income">Pemasukan</option>
                                             <option value="expense">Pengeluaran</option>
@@ -151,7 +131,7 @@
                                     </div>
                                     <div class="form-group">
                                         <label for="category">Kategori *</label>
-                                        <select id="category" required>
+                                        <select id="category" name="category" required>
                                             <option value="">Pilih Kategori</option>
                                             <!-- Pemasukan -->
                                             <option value="gaji" class="income-option">Gaji</option>
@@ -175,24 +155,24 @@
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label for="amount">Jumlah (Rp) *</label>
-                                        <input type="number" id="amount" placeholder="Contoh: 50000" min="0" required>
+                                        <input type="number" id="amount" name="amount" placeholder="Contoh: 50000" min="0" required>
                                     </div>
                                     <div class="form-group">
                                         <label for="date">Tanggal *</label>
-                                        <input type="date" id="date" required>
+                                        <input type="date" id="date" name="date" required>
                                     </div>
                                 </div>
                                 
                                 <div class="form-group" id="saving-target-container" style="display: none;">
                                     <label for="saving-target">Target Tabungan (Opsional)</label>
-                                    <select id="saving-target">
+                                    <select id="saving-target" name="saving-target">
                                         <option value="">Pilih Target Tabungan</option>
                                     </select>
                                 </div>
                                 
                                 <div class="form-group">
                                     <label for="description">Keterangan</label>
-                                    <textarea id="description" placeholder="Tambahkan keterangan transaksi..." rows="2"></textarea>
+                                    <textarea id="description" name="description" placeholder="Tambahkan keterangan transaksi..." rows="2"></textarea>
                                 </div>
                                 
                                 <div class="form-actions">
@@ -350,11 +330,11 @@
                                         <div class="form-row">
                                             <div class="form-group">
                                                 <label for="reminder-edit-name">Nama Pengingat *</label>
-                                                <input type="text" id="reminder-edit-name" placeholder="Contoh: Bayar Listrik" required>
+                                                <input type="text" id="reminder-edit-name" name="reminder-name" placeholder="Contoh: Bayar Listrik" required>
                                             </div>
                                             <div class="form-group">
                                                 <label for="reminder-edit-category">Kategori *</label>
-                                                <select id="reminder-edit-category" required>
+                                                <select id="reminder-edit-category" name="reminder-category" required>
                                                     <option value="">Pilih Kategori</option>
                                                     <option value="listrik">Listrik & Air</option>
                                                     <option value="internet">Internet & TV</option>
@@ -370,30 +350,30 @@
                                         <div class="form-row">
                                             <div class="form-group">
                                                 <label for="reminder-edit-amount">Jumlah (Rp) *</label>
-                                                <input type="number" id="reminder-edit-amount" placeholder="Contoh: 500000" min="0" required>
+                                                <input type="number" id="reminder-edit-amount" name="reminder-amount" placeholder="Contoh: 500000" min="0" required>
                                             </div>
                                             <div class="form-group">
                                                 <label for="reminder-edit-date">Tanggal Bayar (1-31) *</label>
-                                                <input type="number" id="reminder-edit-date" placeholder="Contoh: 10" min="1" max="31" required>
+                                                <input type="number" id="reminder-edit-date" name="reminder-date" placeholder="Contoh: 10" min="1" max="31" required>
                                             </div>
                                         </div>
                                         
                                         <div class="form-row">
                                             <div class="form-group">
                                                 <label for="reminder-edit-duration">Durasi (bulan)</label>
-                                                <input type="number" id="reminder-edit-duration" placeholder="Contoh: 12 (untuk cicilan)" min="0">
+                                                <input type="number" id="reminder-edit-duration" name="reminder-duration" placeholder="Contoh: 12 (untuk cicilan)" min="0">
                                                 <small class="input-hint">Isi 0 untuk pengingat tanpa batas waktu</small>
                                             </div>
                                             <div class="form-group">
                                                 <label for="reminder-edit-start-month">Mulai Bulan</label>
-                                                <input type="month" id="reminder-edit-start-month">
+                                                <input type="month" id="reminder-edit-start-month" name="reminder-start">
                                                 <small class="input-hint">Untuk menghitung sisa durasi</small>
                                             </div>
                                         </div>
                                         
                                         <div class="form-group">
                                             <label for="reminder-edit-description">Keterangan</label>
-                                            <textarea id="reminder-edit-description" placeholder="Tambahkan keterangan pengingat..." rows="2"></textarea>
+                                            <textarea id="reminder-edit-description" name="reminder-desc" placeholder="Tambahkan keterangan pengingat..." rows="2"></textarea>
                                         </div>
                                         
                                         <div class="form-actions">
@@ -449,11 +429,6 @@
                 <span id="data-status">Data disimpan di browser Anda</span> | 
                 <button id="clear-data">Hapus Semua Data</button>
             </p>
-            <div class="footer-actions">
-                <button id="setup-sheets" class="btn-setup">
-                    <i class="fas fa-cogs"></i> Setup Google Sheets
-                </button>
-            </div>
         </footer>
     </div>
 
