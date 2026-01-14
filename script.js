@@ -1,5 +1,5 @@
 // Konfigurasi
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzktGAsdF_dsyYMBy_kpgKEcRBdn7gEJDPU9wj6yWroPrOqw3-4FjHLdgK1H6BZXVJBkA/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyD9VA0Vyn1biMzzD3kOT_BkWxqzTKvG2_iQ2JoDcZU4B57NCVhwVHeC-KPiwZKPLYx4w/exec';
 
 // State aplikasi
 let appData = {
