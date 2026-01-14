@@ -20,7 +20,8 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Aplikasi FinTrack dimulai');
     
     // Set tanggal default di form
-    document.getElementById('date').valueAsDate = new Date();
+    const today = new Date();
+    document.getElementById('date').valueAsDate = today;
     
     // Load data dari localStorage
     loadLocalData();
@@ -30,12 +31,17 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Load data awal
     loadSummary();
-    loadTransactions();
+   loadTransactions('month');
     loadSavingsTargets();
     loadReminders();
     
     // Update UI
     updateUI();
+        if (navigator.onLine) {
+        setTimeout(() => {
+            syncFromCloud();
+        }, 1000);
+    }
 });
 
 // Setup semua event listeners
@@ -90,6 +96,98 @@ function setupEventListeners() {
     document.getElementById('modal-cancel').addEventListener('click', hideModal);
     document.getElementById('clear-data').addEventListener('click', confirmClearData);
     document.getElementById('setup-sheets').addEventListener('click', setupGoogleSheets);
+}
+function formatCategoryName(category) {
+    const names = {
+        'gaji': 'Gaji',
+        'investasi': 'Investasi',
+        'hibah': 'Hibah/Hadiah',
+        'lainnya': 'Lainnya (Pemasukan)',
+        'makanan': 'Makanan & Minuman',
+        'transportasi': 'Transportasi',
+        'belanja': 'Belanja',
+        'hiburan': 'Hiburan',
+        'kesehatan': 'Kesehatan',
+        'pendidikan': 'Pendidikan',
+        'tabungan': 'Tabungan Umum'
+    };
+    
+    return names[category] || category;
+}
+
+function setupCategoryDropdown() {
+    const typeSelect = document.getElementById('transaction-type');
+    const categorySelect = document.getElementById('category');
+    
+    if (!typeSelect || !categorySelect) return;
+    
+    // Reset category options
+    categorySelect.innerHTML = '<option value="">Pilih Kategori</option>';
+    
+    // Show all options initially
+    const allOptions = {
+        income: ['gaji', 'investasi', 'hibah', 'lainnya'],
+        expense: ['makanan', 'transportasi', 'belanja', 'hiburan', 'kesehatan', 'pendidikan', 'lainnya'],
+        saving: ['tabungan']
+    };
+    
+    // Tambahkan semua option terlebih dahulu
+    allOptions.income.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat;
+        option.textContent = formatCategoryName(cat);
+        option.className = 'income-option';
+        categorySelect.appendChild(option);
+    });
+    
+    allOptions.expense.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat;
+        option.textContent = formatCategoryName(cat);
+        option.className = 'expense-option';
+        categorySelect.appendChild(option);
+    });
+    
+    allOptions.saving.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat;
+        option.textContent = formatCategoryName(cat);
+        option.className = 'saving-option';
+        categorySelect.appendChild(option);
+    });
+    
+    // Event listener untuk filter kategori berdasarkan jenis
+    typeSelect.addEventListener('change', function() {
+        const selectedType = this.value;
+        
+        // Sembunyikan semua dulu
+        const allOpts = categorySelect.querySelectorAll('option');
+        allOpts.forEach(opt => {
+            opt.style.display = 'none';
+        });
+        
+        // Tampilkan default option
+        const defaultOpt = categorySelect.querySelector('option[value=""]');
+        if (defaultOpt) defaultOpt.style.display = 'block';
+        
+        // Tampilkan kategori berdasarkan jenis yang dipilih
+        if (selectedType === 'income') {
+            const incomeOpts = categorySelect.querySelectorAll('.income-option');
+            incomeOpts.forEach(opt => opt.style.display = 'block');
+        } else if (selectedType === 'expense') {
+            const expenseOpts = categorySelect.querySelectorAll('.expense-option');
+            expenseOpts.forEach(opt => opt.style.display = 'block');
+        } else if (selectedType === 'saving') {
+            const savingOpts = categorySelect.querySelectorAll('.saving-option');
+            savingOpts.forEach(opt => opt.style.display = 'block');
+        } else {
+            // Jika "Pilih Jenis", tampilkan semua
+            allOpts.forEach(opt => opt.style.display = 'block');
+        }
+        
+        // Reset pilihan kategori
+        categorySelect.value = '';
+    });
 }
 
 // Fungsi untuk switch tab
@@ -168,33 +266,40 @@ function saveTransaction(e) {
     loadSummary();
     
     // Jika ada koneksi internet, sync ke cloud
-    syncTransactionToCloud(transaction);
-    
-    showMessage('Transaksi berhasil disimpan!', 'success');
-}
+if (navigator.onLine) {
+        syncTransactionToCloud(transaction);
+    } else {
+        updateSyncStatus('warning', 'Menunggu sync');
+    }
 
 function syncTransactionToCloud(transaction) {
+    console.log('Syncing transaction to cloud');
+    
     fetch(SCRIPT_URL, {
         method: 'POST',
+        mode: 'no-cors', // Mode no-cors untuk menghindari CORS issues
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
         body: new URLSearchParams({
             action: 'saveTransaction',
             data: JSON.stringify(transaction)
         })
     })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            console.log('Transaksi tersinkron ke cloud');
-            updateSyncStatus('success', 'Tersinkron');
-        }
+    .then(() => {
+        // Karena no-cors, response tidak bisa dibaca
+        console.log('Transaction sync sent');
+        updateSyncStatus('success', 'Tersinkron');
     })
     .catch(error => {
-        console.log('Transaksi disimpan lokal, akan sync nanti');
-        updateSyncStatus('warning', 'Menunggu sync');
+        console.log('Transaction sync failed:', error);
+        updateSyncStatus('warning', 'Sync gagal');
     });
 }
-
+    
 function loadTransactions(filter = 'month') {
+    console.log('Loading transactions with filter:', filter);
+    
     // Hitung range tanggal berdasarkan filter
     let startDate, endDate;
     const today = new Date();
@@ -205,33 +310,60 @@ function loadTransactions(filter = 'month') {
     } else if (filter === 'month') {
         const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
         startDate = firstDay.toISOString().split('T')[0];
-        endDate = today.toISOString().split('T')[0];
+        const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        endDate = lastDay.toISOString().split('T')[0];
     } else if (filter === 'year') {
         const firstDay = new Date(today.getFullYear(), 0, 1);
         startDate = firstDay.toISOString().split('T')[0];
-        endDate = today.toISOString().split('T')[0];
+        const lastDay = new Date(today.getFullYear(), 11, 31);
+        endDate = lastDay.toISOString().split('T')[0];
     }
     
-    // Coba ambil dari cloud jika online
+    // Prioritaskan data lokal dulu untuk response cepat
+    loadLocalTransactions(filter);
+    
+    // Lalu sync dengan cloud jika online
     if (navigator.onLine) {
+        console.log('Fetching from cloud...');
         fetch(`${SCRIPT_URL}?action=getTransactions&startDate=${startDate}&endDate=${endDate}`)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
             .then(result => {
-                if (result.success) {
+                if (result.success && result.data) {
+                    console.log('Cloud data received:', result.data.length, 'transactions');
+                    
+                    // Simpan ke localStorage
+                    const formattedForLocal = result.data.map(transaction => ({
+                        id: Date.now() + Math.random(),
+                        date: transaction.Tanggal,
+                        type: transaction.Tipe === 'Pemasukan' ? 'income' : 
+                              transaction.Tipe === 'Pengeluaran' ? 'expense' : 'saving',
+                        category: transaction.Kategori,
+                        amount: transaction.Jumlah,
+                        description: transaction.Keterangan || '',
+                        localId: Date.now() + Math.random()
+                    }));
+                    
+                    localStorage.setItem('fintrack_transactions', JSON.stringify(formattedForLocal));
+                    
+                    // Update appData
                     appData.transactions = result.data;
-                    renderTransactions();
-                } else {
-                    // Fallback ke data lokal
-                    loadLocalTransactions();
+                    
+                    // Render ulang dengan data baru
+                    renderTransactions(appData.transactions);
+                    
+                    // Update summary
+                    calculateLocalSummary(getCurrentPeriod());
+                    updateSummaryUI();
+                    
+                    showMessage('Data diperbarui dari cloud', 'success');
                 }
             })
-            .catch(() => {
-                // Fallback ke data lokal
-                loadLocalTransactions();
+            .catch(error => {
+                console.log('Cloud fetch failed, using local data:', error.message);
             });
-    } else {
-        // Gunakan data lokal
-        loadLocalTransactions();
     }
 }
 
@@ -268,6 +400,8 @@ function filterByType(type) {
 }
 
 function renderTransactions(transactions = appData.transactions) {
+    console.log('Rendering transactions:', transactions.length);
+    
     const container = document.getElementById('filtered-transactions');
     
     if (!transactions || transactions.length === 0) {
@@ -282,10 +416,12 @@ function renderTransactions(transactions = appData.transactions) {
     }
     
     // Sort by date (newest first)
-    transactions.sort((a, b) => new Date(b.Tanggal) - new Date(a.Tanggal));
+    const sortedTransactions = [...transactions].sort((a, b) => 
+        new Date(b.Tanggal) - new Date(a.Tanggal)
+    );
     
     let html = '';
-    transactions.forEach(transaction => {
+    sortedTransactions.forEach((transaction, index) => {
         const date = new Date(transaction.Tanggal);
         const formattedDate = date.toLocaleDateString('id-ID', {
             day: '2-digit',
@@ -296,11 +432,12 @@ function renderTransactions(transactions = appData.transactions) {
         const amount = formatCurrency(transaction.Jumlah);
         const typeClass = transaction.Tipe === 'Pemasukan' ? 'income' : 
                          transaction.Tipe === 'Pengeluaran' ? 'expense' : 'saving';
+        const iconClass = getCategoryIcon(transaction.Kategori);
         
         html += `
             <div class="transaction-item ${typeClass}">
                 <div class="transaction-icon">
-                    <i class="fas ${getCategoryIcon(transaction.Kategori)}"></i>
+                    <i class="fas ${iconClass}"></i>
                 </div>
                 <div class="transaction-details">
                     <div class="transaction-header">
@@ -317,6 +454,49 @@ function renderTransactions(transactions = appData.transactions) {
     });
     
     container.innerHTML = html;
+}
+
+
+function loadLocalTransactions(filter = 'month') {
+    console.log('Loading local transactions');
+    
+    const localTransactions = JSON.parse(localStorage.getItem('fintrack_transactions') || '[]');
+    
+    // Filter berdasarkan periode
+    let filteredTransactions = localTransactions;
+    
+    if (filter === 'day') {
+        const today = new Date().toISOString().split('T')[0];
+        filteredTransactions = localTransactions.filter(t => 
+            new Date(t.date).toISOString().split('T')[0] === today
+        );
+    } else if (filter === 'month') {
+        const currentMonth = new Date().getMonth();
+        const currentYear = new Date().getFullYear();
+        filteredTransactions = localTransactions.filter(t => {
+            const transDate = new Date(t.date);
+            return transDate.getMonth() === currentMonth && 
+                   transDate.getFullYear() === currentYear;
+        });
+    } else if (filter === 'year') {
+        const currentYear = new Date().getFullYear();
+        filteredTransactions = localTransactions.filter(t => 
+            new Date(t.date).getFullYear() === currentYear
+        );
+    }
+    
+    // Konversi ke format yang sama dengan cloud
+    appData.transactions = filteredTransactions.map(t => ({
+        Tanggal: t.date,
+        Tipe: t.type === 'income' ? 'Pemasukan' : 
+              t.type === 'expense' ? 'Pengeluaran' : 'Tabungan',
+        Kategori: t.category,
+        Jumlah: parseFloat(t.amount) || 0,
+        Keterangan: t.description || ''
+    }));
+    
+    console.log('Local transactions loaded:', appData.transactions.length);
+    renderTransactions(appData.transactions);
 }
 
 // ===== FUNGSI TABUNGAN =====
@@ -510,11 +690,15 @@ function populateSavingTargetDropdown() {
 function toggleSavingTarget() {
     const type = document.getElementById('transaction-type').value;
     const container = document.getElementById('saving-target-container');
+    const targetSelect = document.getElementById('saving-target');
     
     if (type === 'saving') {
         container.style.display = 'block';
+        // Pastikan dropdown terisi
+        populateSavingTargetDropdown();
     } else {
         container.style.display = 'none';
+        targetSelect.value = ''; // Reset pilihan
     }
 }
 
