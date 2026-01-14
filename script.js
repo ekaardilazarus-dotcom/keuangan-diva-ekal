@@ -220,7 +220,7 @@ function updateCategoryOptions(selectedType) {
         }
     }
 }
-}
+
 
 function addCategoryOption(value, text) {
     const categorySelect = document.getElementById('category');
