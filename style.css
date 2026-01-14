@@ -2308,3 +2308,20 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: var(--primary-dark);
 }
+/* ============ FIX CATEGORY DROPDOWN ============ */
+#category option {
+    display: none;
+}
+
+#category option[value=""] {
+    display: block !important;
+}
+
+#category option.income-option,
+#category option.expense-option,
+#category option.saving-option {
+    display: none;
+}
+
+/* CSS untuk menampilkan option berdasarkan jenis transaksi */
+/* Ini akan dikontrol oleh JavaScript */
