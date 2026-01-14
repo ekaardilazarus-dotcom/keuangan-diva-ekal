@@ -24,21 +24,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const dateInput = document.getElementById('date');
     if (dateInput) {
         dateInput.valueAsDate = today;
-        // Format YYYY-MM-DD
         dateInput.value = today.toISOString().split('T')[0];
     }
-        const transType = document.getElementById('transaction-type');
+    
+    const transType = document.getElementById('transaction-type');
     if (transType) {
         updateCategoryOptions(transType.value);
     }
+    
     // Load data dari localStorage
     loadLocalData();
-   // Inisialisasi dropdown kategori
+    
+    // Inisialisasi dropdown kategori
     setupCategoryDropdown();
     
     // Setup event listeners
     setupEventListeners();
- 
+    
     // Load data awal
     loadSummary();
     loadTransactions('month');
@@ -47,6 +49,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Update UI
     updateUI();
+    
     if (navigator.onLine) {
         setTimeout(() => {
             syncFromCloud();
@@ -57,6 +60,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Setup semua event listeners
 function setupEventListeners() {
     console.log('Setting up event listeners...');
+    
     // Tab buttons
     document.querySelectorAll('.tab-button').forEach(button => {
         button.addEventListener('click', function() {
@@ -111,7 +115,7 @@ function setupEventListeners() {
     // Type dropdown untuk kategori
     const transType = document.getElementById('transaction-type');
     if (transType) {
-       transType.addEventListener('change', function() {
+        transType.addEventListener('change', function() {
             console.log('Transaction type changed to:', this.value);
             updateCategoryOptions(this.value);
             toggleSavingTarget();
@@ -154,13 +158,9 @@ function updateCategoryOptions(selectedType) {
     const categorySelect = document.getElementById('category');
     if (!categorySelect) return;
     
-    // Simpan nilai yang dipilih
     const currentValue = categorySelect.value;
-    
-    // Reset dropdown
     categorySelect.innerHTML = '<option value="">Pilih Kategori</option>';
     
-    // Array kategori berdasarkan jenis
     let categories = [];
     
     if (selectedType === 'income') {
@@ -185,7 +185,6 @@ function updateCategoryOptions(selectedType) {
             { value: 'tabungan', text: 'Tabungan Umum' }
         ];
     } else {
-        // Default show semua kategori
         categories = [
             { value: 'gaji', text: 'Gaji' },
             { value: 'investasi', text: 'Investasi' },
@@ -201,34 +200,30 @@ function updateCategoryOptions(selectedType) {
         ];
     }
     
-    // Tambahkan opsi ke dropdown
     categories.forEach(cat => {
         const option = document.createElement('option');
         option.value = cat.value;
         option.textContent = cat.text;
-        option.className = `${selectedType}-option`; // Tambahkan kelas
+        option.className = `${selectedType}-option`;
         categorySelect.appendChild(option);
     });
     
-    // Setel kembali nilai yang dipilih jika masih ada
     if (currentValue) {
-        // Cari apakah nilai lama masih valid
         const stillValid = categories.some(cat => cat.value === currentValue);
         if (stillValid) {
             categorySelect.value = currentValue;
         }
     }
 }
+
 function toggleSavingTarget() {
     const type = document.getElementById('transaction-type').value;
     const container = document.getElementById('saving-target-container');
     
-    // Tampilkan/sembunyikan container target tabungan
     if (container) {
         container.style.display = type === 'saving' ? 'block' : 'none';
     }
     
-    // Auto-pilih kategori "tabungan" jika jenis adalah saving
     if (type === 'saving') {
         setTimeout(() => {
             const categorySelect = document.getElementById('category');
@@ -238,11 +233,11 @@ function toggleSavingTarget() {
         }, 100);
     }
 }
+
 // Fungsi untuk switch tab
 function switchTab(tabId) {
     console.log('Switching to tab:', tabId);
     
-    // Update tab buttons
     const buttons = document.querySelectorAll('.tab-button');
     buttons.forEach(button => {
         button.classList.remove('active');
@@ -251,7 +246,6 @@ function switchTab(tabId) {
         }
     });
     
-    // Update tab content
     const contents = document.querySelectorAll('.tab-content');
     contents.forEach(content => {
         content.classList.remove('active');
@@ -260,7 +254,6 @@ function switchTab(tabId) {
         }
     });
 
-    // Re-render specific tab content if needed
     if (tabId === 'transaction-list') {
         loadTransactions('month');
     } else if (tabId === 'savings') {
@@ -282,7 +275,6 @@ function saveTransaction(e) {
     const description = document.getElementById('description').value;
     const targetId = document.getElementById('saving-target').value;
     
-    // Validasi
     if (!type || !category || !amount || !date) {
         showMessage('Harap isi semua field yang wajib', 'error');
         return;
@@ -297,11 +289,9 @@ function saveTransaction(e) {
         targetId: targetId || null
     };
     
-    // Simpan ke localStorage (offline)
     let localTransactions = JSON.parse(localStorage.getItem('fintrack_transactions') || '[]');
     const transactionId = Date.now();
     
-    // Hitung saldo untuk transaksi ini
     let currentBalance = calculateLocalTotalBalance();
     let transactionBalance = currentBalance;
     
@@ -315,31 +305,26 @@ function saveTransaction(e) {
         id: transactionId,
         ...transaction,
         localId: transactionId,
-        balance: transactionBalance // Simpan saldo setelah transaksi
+        balance: transactionBalance
     };
     
     localTransactions.unshift(transactionWithId);
     localStorage.setItem('fintrack_transactions', JSON.stringify(localTransactions));
     
-    // Update data lokal
     appData.transactions.unshift({
         Tanggal: date,
         Tipe: type === 'income' ? 'Pemasukan' : type === 'expense' ? 'Pengeluaran' : 'Tabungan',
         Kategori: category,
         Jumlah: parseFloat(amount),
         Keterangan: description,
-        Saldo: transactionBalance // Tambah saldo
+        Saldo: transactionBalance
     });
     
-    // Reset form
     resetForm();
-    
-    // Update UI
     updateUI();
     loadTransactions();
     loadSummary();
     
-    // Sync ke cloud
     if (navigator.onLine) {
         syncTransactionToCloud(transaction);
     } else {
@@ -348,7 +333,7 @@ function saveTransaction(e) {
     
     showMessage('Transaksi berhasil disimpan!', 'success');
 }
-//---------------
+
 function syncTransactionToCloud(transaction) {
     const url = `${SCRIPT_URL}?action=saveTransaction&data=${encodeURIComponent(JSON.stringify(transaction))}`;
     
@@ -369,10 +354,7 @@ function syncTransactionToCloud(transaction) {
 function loadTransactions(filter = 'month') {
     console.log('Loading transactions, filter:', filter);
     
-    // Gunakan data lokal dulu untuk response cepat
     const localTransactions = JSON.parse(localStorage.getItem('fintrack_transactions') || '[]');
-    
-    // Filter berdasarkan periode
     let filteredTransactions = localTransactions;
     const today = new Date();
     
@@ -396,7 +378,6 @@ function loadTransactions(filter = 'month') {
         );
     }
     
-    // Konversi ke format appData
     appData.transactions = filteredTransactions.map(t => ({
         Tanggal: t.date,
         Tipe: t.type === 'income' ? 'Pemasukan' : t.type === 'expense' ? 'Pengeluaran' : 'Tabungan',
@@ -408,65 +389,11 @@ function loadTransactions(filter = 'month') {
     console.log('Transactions loaded:', appData.transactions.length);
     renderTransactions();
     
-    // Sync dari cloud jika online (tapi tetap tampilkan data lokal dulu)
     if (navigator.onLine) {
         syncTransactionsFromCloud(filter);
     }
 }
-// ===== FUNGSI BARU: getCurrentBalanceFromCloud =====
-function getCurrentBalanceFromCloud() {
-    if (!navigator.onLine) {
-        console.log('Offline, using local balance');
-        return calculateLocalTotalBalance();
-    }
-    
-    return fetch(`${SCRIPT_URL}?action=getCurrentBalance`)
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                return result.balance || 0;
-            }
-            return 0;
-        })
-        .catch(error => {
-            console.log('Failed to get balance from cloud:', error);
-            return calculateLocalTotalBalance();
-        });
-}
 
-// ===== FUNGSI BARU: calculateLocalTotalBalance =====
-function calculateLocalTotalBalance() {
-    const localTransactions = JSON.parse(localStorage.getItem('fintrack_transactions') || '[]');
-    
-    if (localTransactions.length === 0) return 0;
-    
-    // Cari transaksi terakhir untuk mengambil saldo
-    const latestTransaction = localTransactions.reduce((latest, current) => {
-        return new Date(current.date) > new Date(latest.date) ? current : latest;
-    });
-    
-    // Jika transaksi memiliki properti balance (dari cloud)
-    if (latestTransaction.balance !== undefined) {
-        return parseFloat(latestTransaction.balance) || 0;
-    }
-    
-    // Jika tidak, hitung manual
-    let totalIncome = 0;
-    let totalExpense = 0;
-    let totalSaving = 0;
-    
-    localTransactions.forEach(t => {
-        const amount = parseFloat(t.amount) || 0;
-        const type = (t.type || '').toLowerCase();
-        
-        if (type === 'income') totalIncome += amount;
-        else if (type === 'expense') totalExpense += amount;
-        else if (type === 'saving') totalSaving += amount;
-    });
-    
-    return totalIncome - totalExpense - totalSaving;
-}
-//------------
 function syncTransactionsFromCloud(filter) {
     const today = new Date();
     let startDate, endDate;
@@ -493,12 +420,9 @@ function syncTransactionsFromCloud(filter) {
         .then(result => {
             if (result.success && result.data) {
                 console.log('Cloud data received:', result.data.length);
-                
-                // Update appData dengan data dari cloud
                 appData.transactions = result.data;
                 renderTransactions();
                 
-                // Simpan ke localStorage untuk semua data (tidak hanya filtered)
                 const allUrl = `${SCRIPT_URL}?action=getTransactions`;
                 return fetch(allUrl);
             }
@@ -506,7 +430,6 @@ function syncTransactionsFromCloud(filter) {
         .then(response => response && response.json())
         .then(result => {
             if (result && result.success && result.data) {
-                // Simpan semua data ke localStorage
                 const formatted = result.data.map(t => ({
                     id: Date.now() + Math.random(),
                     date: t.Tanggal,
@@ -561,7 +484,6 @@ function renderTransactions(transactions = appData.transactions) {
         return;
     }
     
-    // Sort by date (newest first)
     transactions.sort((a, b) => new Date(b.Tanggal) - new Date(a.Tanggal));
     
     let html = '';
@@ -604,8 +526,6 @@ function loadLocalTransactions(filter = 'month') {
     console.log('Loading local transactions');
     
     const localTransactions = JSON.parse(localStorage.getItem('fintrack_transactions') || '[]');
-    
-    // Filter berdasarkan periode
     let filteredTransactions = localTransactions;
     
     if (filter === 'day') {
@@ -628,7 +548,6 @@ function loadLocalTransactions(filter = 'month') {
         );
     }
     
-    // Konversi ke format yang sama dengan cloud
     appData.transactions = filteredTransactions.map(t => ({
         Tanggal: t.date,
         Tipe: t.type === 'income' ? 'Pemasukan' : 
@@ -645,7 +564,6 @@ function loadLocalTransactions(filter = 'month') {
 // ===== FUNGSI TABUNGAN =====
 
 function loadSavingsTargets() {
-    // Load dari localStorage dulu
     const localTargets = JSON.parse(localStorage.getItem('fintrack_savings_targets') || '[]');
     appData.savingsTargets = localTargets.map(t => ({
         ...t,
@@ -656,7 +574,6 @@ function loadSavingsTargets() {
     populateSavingTargetDropdown();
     updateSavingsProgress();
     
-    // Sync dari cloud jika online
     if (navigator.onLine) {
         fetch(`${SCRIPT_URL}?action=getSavingsTargets`)
             .then(response => response.json())
@@ -666,8 +583,6 @@ function loadSavingsTargets() {
                     renderSavingsTargets();
                     populateSavingTargetDropdown();
                     updateSavingsProgress();
-                    
-                    // Simpan ke localStorage
                     localStorage.setItem('fintrack_savings_targets', JSON.stringify(result.data));
                 }
             })
@@ -752,12 +667,10 @@ function addSavingsTarget() {
         color: color
     };
     
-    // Simpan ke localStorage
     let localTargets = JSON.parse(localStorage.getItem('fintrack_savings_targets') || '[]');
     localTargets.push(target);
     localStorage.setItem('fintrack_savings_targets', JSON.stringify(localTargets));
     
-    // Update data lokal
     appData.savingsTargets.push({
         nama: name,
         target: parseFloat(targetAmount),
@@ -767,17 +680,14 @@ function addSavingsTarget() {
         progress: 0
     });
     
-    // Reset form
     document.getElementById('target-name').value = '';
     document.getElementById('target-amount').value = '';
     document.getElementById('target-deadline').value = '';
     
-    // Update UI
     renderSavingsTargets();
     populateSavingTargetDropdown();
     updateSavingsProgress();
     
-    // Sync ke cloud
     if (navigator.onLine) {
         fetch(`${SCRIPT_URL}?action=saveSavingsTarget&data=${encodeURIComponent(JSON.stringify(target))}`)
             .then(response => response.json())
@@ -807,26 +717,6 @@ function populateSavingTargetDropdown() {
     });
 }
 
-function toggleSavingTarget() {
-    const type = document.getElementById('transaction-type').value;
-    const container = document.getElementById('saving-target-container');
-    
-    // Tampilkan/sembunyikan container target tabungan
-    if (container) {
-        container.style.display = type === 'saving' ? 'block' : 'none';
-    }
-    
-    // Auto-pilih kategori "tabungan" jika jenis adalah saving
-    if (type === 'saving') {
-        setTimeout(() => {
-            const categorySelect = document.getElementById('category');
-            if (categorySelect) {
-                categorySelect.value = 'tabungan';
-            }
-        }, 100);
-    }
-}
-
 function updateSavingsProgress() {
     const container = document.getElementById('progress-container');
     if (!container) return;
@@ -836,7 +726,6 @@ function updateSavingsProgress() {
         return;
     }
     
-    // Hitung total progress
     let totalTarget = 0;
     let totalCurrent = 0;
     
@@ -863,7 +752,6 @@ function updateSavingsProgress() {
         </div>
     `;
     
-    // Update stats cards
     const totalAmountEl = document.getElementById('total-savings-amount');
     if (totalAmountEl) totalAmountEl.textContent = formatCurrency(totalCurrent);
     
@@ -903,7 +791,7 @@ function loadReminders() {
 }
 
 function renderReminders() {
-    // This function might be for a dashboard view if added later
+    // Fungsi untuk dashboard jika diperlukan
 }
 
 function renderRemindersEdit() {
@@ -1040,32 +928,8 @@ function deleteReminder() {
     });
 }
 
-// ===== PERBAIKAN FUNGSI loadSummary =====
-async function loadSummary() {
-    // Hitung summary lokal dulu untuk response cepat
-    calculateLocalSummary();
-    
-    // Ambil saldo terkini dari cloud
-    if (navigator.onLine) {
-        try {
-            const periodEl = document.querySelector('input[name="period"]:checked');
-            const period = periodEl ? periodEl.value : 'month';
-            
-            // Ambil summary dari cloud
-            const response = await fetch(`${SCRIPT_URL}?action=getSummary&period=${period}`);
-            const result = await response.json();
-            
-            if (result.success && result.data) {
-                // Update appData dengan data dari cloud
-                appData.summary = result.data;
-                updateSummaryUI();
-            }
-        } catch (error) {
-            console.log('Failed to load summary from cloud:', error);
-        }
-    }
-}
-// ===== PERBAIKAN FUNGSI calculateLocalSummary =====
+// ===== FUNGSI SUMMARY =====
+
 function calculateLocalSummary() {
     console.log('Calculating local summary...');
     const periodEl = document.querySelector('input[name="period"]:checked');
@@ -1075,7 +939,6 @@ function calculateLocalSummary() {
     const now = new Date();
     let filteredTransactions = allTransactions;
     
-    // Filter untuk summary periode
     if (period === 'day') {
         const todayStr = now.toISOString().split('T')[0];
         filteredTransactions = allTransactions.filter(t => {
@@ -1097,7 +960,6 @@ function calculateLocalSummary() {
         );
     }
     
-    // Hitung untuk periode yang dipilih
     let periodIncome = 0;
     let periodExpense = 0;
     let periodSaving = 0;
@@ -1110,20 +972,19 @@ function calculateLocalSummary() {
         else if (type === 'saving') periodSaving += amount;
     });
     
-    // Hitung saldo TOTAL (dari semua transaksi)
     const totalBalance = calculateLocalTotalBalance();
     
     appData.summary = {
-        income: periodIncome,      // Pemasukan periode ini
-        expense: periodExpense,    // Pengeluaran periode ini
-        saving: periodSaving,      // Tabungan periode ini
-        balance: totalBalance      // SALDO TOTAL (tidak berubah dengan filter)
+        income: periodIncome,
+        expense: periodExpense,
+        saving: periodSaving,
+        balance: totalBalance
     };
     
     console.log('Summary calculated:', appData.summary);
     updateSummaryUI();
 }
-//------------
+
 function updateSummaryUI() {
     console.log('Updating summary UI:', appData.summary);
     
@@ -1139,14 +1000,35 @@ function updateSummaryUI() {
     const balanceEls = document.querySelectorAll('.balance');
     balanceEls.forEach(el => el.textContent = formatCurrency(appData.summary.balance));
     
-    // Update juga di tab Tabungan
     const totalSavingsAmountEl = document.getElementById('total-savings-amount');
     if (totalSavingsAmountEl) {
         totalSavingsAmountEl.textContent = formatCurrency(appData.summary.saving);
     }
 }
 
+async function loadSummary() {
+    calculateLocalSummary();
+    
+    if (navigator.onLine) {
+        try {
+            const periodEl = document.querySelector('input[name="period"]:checked');
+            const period = periodEl ? periodEl.value : 'month';
+            
+            const response = await fetch(`${SCRIPT_URL}?action=getSummary&period=${period}`);
+            const result = await response.json();
+            
+            if (result.success && result.data) {
+                appData.summary = result.data;
+                updateSummaryUI();
+            }
+        } catch (error) {
+            console.log('Failed to load summary from cloud:', error);
+        }
+    }
+}
+
 // ===== SYNC FUNCTIONS =====
+
 function syncFromCloud() {
     if (!navigator.onLine) {
         showMessage('Tidak ada koneksi internet', 'error');
@@ -1180,13 +1062,12 @@ function syncFromCloud() {
                 appData.lastSync = now;
                 localStorage.setItem('fintrack_last_sync', now.toISOString());
                 
-                // Urutan pemanggilan yang benar
                 loadLocalData();
-                calculateLocalSummary(); 
+                calculateLocalSummary();
                 loadTransactions('month');
                 loadSavingsTargets();
                 loadReminders();
-                setupCategoryDropdown(); // Pastikan kategori muncul setelah sync
+                setupCategoryDropdown();
                 updateUI();
                 
                 updateSyncStatus('success', 'Tersinkron');
@@ -1351,4 +1232,55 @@ function clearAllData() {
     loadSavingsTargets();
     loadReminders();
     showMessage('Semua data lokal berhasil dihapus', 'success');
+}
+
+// ===== FUNGSI TAMBAHAN YANG DIPERLUKAN =====
+
+function getCurrentBalanceFromCloud() {
+    if (!navigator.onLine) {
+        console.log('Offline, using local balance');
+        return calculateLocalTotalBalance();
+    }
+    
+    return fetch(`${SCRIPT_URL}?action=getCurrentBalance`)
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                return result.balance || 0;
+            }
+            return 0;
+        })
+        .catch(error => {
+            console.log('Failed to get balance from cloud:', error);
+            return calculateLocalTotalBalance();
+        });
+}
+
+function calculateLocalTotalBalance() {
+    const localTransactions = JSON.parse(localStorage.getItem('fintrack_transactions') || '[]');
+    
+    if (localTransactions.length === 0) return 0;
+    
+    const latestTransaction = localTransactions.reduce((latest, current) => {
+        return new Date(current.date) > new Date(latest.date) ? current : latest;
+    });
+    
+    if (latestTransaction.balance !== undefined) {
+        return parseFloat(latestTransaction.balance) || 0;
+    }
+    
+    let totalIncome = 0;
+    let totalExpense = 0;
+    let totalSaving = 0;
+    
+    localTransactions.forEach(t => {
+        const amount = parseFloat(t.amount) || 0;
+        const type = (t.type || '').toLowerCase();
+        
+        if (type === 'income') totalIncome += amount;
+        else if (type === 'expense') totalExpense += amount;
+        else if (type === 'saving') totalSaving += amount;
+    });
+    
+    return totalIncome - totalExpense - totalSaving;
 }
